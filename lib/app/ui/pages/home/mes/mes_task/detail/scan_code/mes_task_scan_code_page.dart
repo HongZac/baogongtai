@@ -5,6 +5,7 @@ import 'package:basement/utils.dart';
 import 'package:desktop/app/pickers/picker_view/picker.dart';
 import 'package:desktop/app/theme/app_colors.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_page.dart';
+import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/scan_code/mes_task_scan_code_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/submit/mes_task_submit_controller.dart';
 import 'package:desktop/app/ui/widget/blink_widget.dart';
 import 'package:desktop/app/ui/widget/card_widget.dart';
@@ -16,10 +17,10 @@ import 'package:get/get.dart';
 
 
 ///报工扫码页面
-class MesTaskScanCodePage extends BaseFormPage<MesTaskSubmitController>{
+class MesTaskScanCodePage extends BaseFormPage<MesTaskScanCodeController>{
 
   @override
-  Widget contentWidget(BuildContext context, MesTaskSubmitController _) {
+  Widget contentWidget(BuildContext context, MesTaskScanCodeController _) {
     return Stack(
       children: [
         Column(
@@ -55,7 +56,7 @@ class MesTaskScanCodePage extends BaseFormPage<MesTaskSubmitController>{
     );
   }
 
-  Widget taskWidget(BuildContext context, MesTaskSubmitController _){
+  Widget taskWidget(BuildContext context, MesTaskScanCodeController _){
     return Container(
       alignment: Alignment.topCenter,
       margin: const EdgeInsets.all(8),
@@ -219,7 +220,7 @@ class MesTaskScanCodePage extends BaseFormPage<MesTaskSubmitController>{
     );
   }
 
-  Widget submitWidget(BuildContext context, MesTaskSubmitController _){
+  Widget submitWidget(BuildContext context, MesTaskScanCodeController _){
     return Container(
       alignment: Alignment.topCenter,
       child: Column(

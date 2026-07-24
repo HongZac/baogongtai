@@ -50,7 +50,7 @@ import 'package:get/get.dart';
 class MesTaskSubmitController
     extends BaseFormController
     with InfoFormInterface,
-        //SerialPortGetXListenerMixin<MesTaskSubmitController>, ScanInterface<MesTaskSubmitController>,
+        // SerialPortGetXListenerMixin<MesTaskSubmitController>, ScanInterface<MesTaskSubmitController>,
         AssignmentInterface,
         InvClassFrxNameInterface,
         SubmitPrintBarcodeInterface,
@@ -160,10 +160,10 @@ class MesTaskSubmitController
     List<dynamic> taskInfoFormMapList = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_SUBMIT_INFO_FORM_LIST_KEY) ?? [];
     taskInfoFormList.clear();
     taskInfoFormList.addAll(
-      getInfoFormListByStorage(
-        taskInfoFormMapList,
-        AppConfig.mesTaskInfoFormList
-      )
+        getInfoFormListByStorage(
+            taskInfoFormMapList,
+            AppConfig.mesTaskInfoFormList
+        )
     );
 
     submitBtnIndex = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_SUBMIT_BTN_INDEX_KEY) ?? AppConfig.submitBtnIndex;
@@ -237,19 +237,20 @@ class MesTaskSubmitController
   Future<void> onReady() async{
     await super.onReady();
 
-    // connectList.forEach((element) {
-    //   element.weightMsgConnectService = WeightMsgConnect(connectModel: element, onFire: (data) { ///数据处理
-    //     if (element.weightMsgConnectService == null){ return; }
-    //     portMsgOnData(
-    //       element.key,
-    //       data: data,
-    //       isWeightMsgReverseOrder: element.isWeightMsgReverseOrder,
-    //       accuracy: element.accuracy,
-    //     );
-    //     return null;
-    //   });
-    //   element.weightMsgConnectService!.onInit();
-    // });
+    /*connectList.forEach((element) {
+      element.weightMsgConnectService = WeightMsgConnect(connectModel: element, onFire: (data) { ///数据处理
+        if (element.weightMsgConnectService == null){ return; }
+        portMsgOnData(
+          element.key,
+          data: data,
+          isWeightMsgReverseOrder: element.isWeightMsgReverseOrder,
+          accuracy: element.accuracy,
+        );
+        return null;
+      });
+      element.weightMsgConnectService!.onInit();
+    }); */
+
   }
 
   @override
@@ -261,12 +262,12 @@ class MesTaskSubmitController
     setFormJudgeTypeMap();
     setWeightFormDecimalLengthMap();
     setSubmitDataAndAdapter(
-      isInit: true,
-      progId: progId,
-      deviceId: eamDeviceModelWithGetxController?.model.deviceId,
-      deviceCode: eamDeviceModelWithGetxController?.model.deviceCode,
-      deviceName: eamDeviceModelWithGetxController?.model.deviceName,
-      isNeedSetSingleBoxQty: !isSaveTheLastPackingWeightData || ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_SUBMIT_THE_LAST_SINGLE_BOX_QTY_VALUE_KEY) == null
+        isInit: true,
+        progId: progId,
+        deviceId: eamDeviceModelWithGetxController?.model.deviceId,
+        deviceCode: eamDeviceModelWithGetxController?.model.deviceCode,
+        deviceName: eamDeviceModelWithGetxController?.model.deviceName,
+        isNeedSetSingleBoxQty: !isSaveTheLastPackingWeightData || ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_SUBMIT_THE_LAST_SINGLE_BOX_QTY_VALUE_KEY) == null
     );
     getInventoryInfo(taskModel.invId ?? '').then((value) {
       update();
@@ -498,11 +499,11 @@ class MesTaskSubmitController
     }
     taskModel = item;
     await setSubmitDataAndAdapter(
-      isInit: false,
-      deviceId: eamDeviceModelWithGetxController?.model.deviceId,
-      deviceCode: eamDeviceModelWithGetxController?.model.deviceCode,
-      deviceName: eamDeviceModelWithGetxController?.model.deviceName,
-      isNeedSetSingleBoxQty: !isSaveTheLastPackingWeightData || ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_SUBMIT_THE_LAST_SINGLE_BOX_QTY_VALUE_KEY) == null
+        isInit: false,
+        deviceId: eamDeviceModelWithGetxController?.model.deviceId,
+        deviceCode: eamDeviceModelWithGetxController?.model.deviceCode,
+        deviceName: eamDeviceModelWithGetxController?.model.deviceName,
+        isNeedSetSingleBoxQty: !isSaveTheLastPackingWeightData || ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_SUBMIT_THE_LAST_SINGLE_BOX_QTY_VALUE_KEY) == null
     );
     if (inventoryModel == null){
       await getInventoryInfo(taskModel.invId ?? '');
@@ -551,7 +552,7 @@ class MesTaskSubmitController
       //endregion
 
       //region 刷新次品记录列表的数据
-       MesCheckRecordListController? checkRecordListController;
+      MesCheckRecordListController? checkRecordListController;
       try {
         checkRecordListController = Get.find<MesCheckRecordListController>();
       } catch (e){}
@@ -703,27 +704,27 @@ class MesTaskSubmitController
         switch (keyName){
           case NumPadUtil.qty:
           case NumPadUtil.weight:
-          double weight = (double.tryParse(NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '') ?? 0) * 1000;
-          int qty = int.tryParse(NumPadUtil().getText(NumPadUtil.qty, numPadCTList) ?? '') ?? 0;
-          String _pieceWeightString;
-          if (weight > 0 && qty > 0){
-            _pieceWeightString = (weight / qty).toStringAsFixed(weightFormDecimalLengthMap[NumPadUtil.pieceWeight]!);
-          }
-          else {
-            _pieceWeightString = '';
-          }
-          double _pieceWeight = double.tryParse(_pieceWeightString) ?? 0;
-          NumPadUtil().setText(NumPadUtil.eBWeight, weight.toString(), numPadCTList);
-          NumPadUtil().setText(NumPadUtil.eBPiece, qty.toString(), numPadCTList);
-          NumPadUtil().setText(NumPadUtil.pieceWeight, _pieceWeightString, numPadCTList);
-          isWeightError = _pieceWeight != 0
-              && ((inventoryModel.invWeight ?? 0) / _pieceWeight - 1).abs() > (limitWeightDeviationValue / 100);
-          break;
+            double weight = (double.tryParse(NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '') ?? 0) * 1000;
+            int qty = int.tryParse(NumPadUtil().getText(NumPadUtil.qty, numPadCTList) ?? '') ?? 0;
+            String _pieceWeightString;
+            if (weight > 0 && qty > 0){
+              _pieceWeightString = (weight / qty).toStringAsFixed(weightFormDecimalLengthMap[NumPadUtil.pieceWeight]!);
+            }
+            else {
+              _pieceWeightString = '';
+            }
+            double _pieceWeight = double.tryParse(_pieceWeightString) ?? 0;
+            NumPadUtil().setText(NumPadUtil.eBWeight, weight.toString(), numPadCTList);
+            NumPadUtil().setText(NumPadUtil.eBPiece, qty.toString(), numPadCTList);
+            NumPadUtil().setText(NumPadUtil.pieceWeight, _pieceWeightString, numPadCTList);
+            isWeightError = _pieceWeight != 0
+                && ((inventoryModel.invWeight ?? 0) / _pieceWeight - 1).abs() > (limitWeightDeviationValue / 100);
+            break;
         }
       }
 
       weightOverlayStreamController.add(
-        NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '0'
+          NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '0'
       );
 
       update();
@@ -804,51 +805,51 @@ class MesTaskSubmitController
 
   //region 串口、扫码
 
-  // @override
-  // Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
-  //   for (var element in weightMsgConnectService.connectList){
-  //     if (element.com == serialPortDataModel.com){
-  //       portMsgOnData(
-  //         element.key,
-  //         data: serialPortDataModel.data,
-  //         accuracy: element.accuracy,
-  //       );
-  //     }
-  //   }
-  // }
+ /* @override
+  Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
+    for (var element in weightMsgConnectService.connectList){
+      if (element.com == serialPortDataModel.com){
+        portMsgOnData(
+          element.key,
+          data: serialPortDataModel.data,
+          accuracy: element.accuracy,
+        );
+      }
+    }
+  }
 
-  // void portMsgOnData(String key, {
-  //   required dynamic data,
-  //   bool isWeightMsgReverseOrder = false,
-  //   double accuracy = 0,
-  // }){
-  //   switch (key) {
-  //     case WeightMsgConnectService.dSWeight:
-  //       //region 报工总重
-  //       if (submitType != AppConfig.qtySubmit && submitType != AppConfig.singleBoxSerialNumberSubmit) { return; }
-  //       String formatValue = weightMsgConnectService.getFormatValue(
-  //         data,
-  //         isWeightMsgReverseOrder: isWeightMsgReverseOrder,
-  //       );
-  //       //region 判断差值
-  //       String _oldString = NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '';
-  //       bool isLessThen = weightMsgConnectService.isWithinAcceptableErrorRange(
-  //           oldValue: double.tryParse(_oldString),
-  //           value: double.tryParse(formatValue) ?? 0,
-  //           errorRange: accuracy
-  //       );
-  //       if (isLessThen){ return; }
-  //       //endregion
-  //       NumPadUtil().setText(NumPadUtil.weight, formatValue, numPadCTList, isDataByWeightMsg: true);
-  //       calcQty(NumPadUtil.weight);
-  //       //endregion
-  //       break;
-  //     case WeightMsgConnectService.scanGun:
-  //     case WeightMsgConnectService.cardReader:
-  //       onBarcode(data);
-  //       break;
-  //   }
-  // }
+  void portMsgOnData(String key, {
+    required dynamic data,
+    bool isWeightMsgReverseOrder = false,
+    double accuracy = 0,
+  }){
+    switch (key) {
+      case WeightMsgConnectService.dSWeight:
+      //region 报工总重
+        if (submitType != AppConfig.qtySubmit && submitType != AppConfig.singleBoxSerialNumberSubmit) { return; }
+        String formatValue = weightMsgConnectService.getFormatValue(
+          data,
+          isWeightMsgReverseOrder: isWeightMsgReverseOrder,
+        );
+        //region 判断差值
+        String _oldString = NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '';
+        bool isLessThen = weightMsgConnectService.isWithinAcceptableErrorRange(
+            oldValue: double.tryParse(_oldString),
+            value: double.tryParse(formatValue) ?? 0,
+            errorRange: accuracy
+        );
+        if (isLessThen){ return; }
+        //endregion
+        NumPadUtil().setText(NumPadUtil.weight, formatValue, numPadCTList, isDataByWeightMsg: true);
+        calcQty(NumPadUtil.weight);
+        //endregion
+        break;
+      case WeightMsgConnectService.scanGun:
+      case WeightMsgConnectService.cardReader:
+        onBarcode(data);
+        break;
+    }
+  }*/
 
   ///扫描接收
   Future<void> onBarcode(String searchString) async{
@@ -870,7 +871,8 @@ class MesTaskSubmitController
     }
     ProgressDialogUtil.showProgressDialog(msg: '正在返回扫描结果');
 
-    // searchString = getBarCodePrefix(searchString, objectItem.attributeList);
+    /*searchString = getBarCodePrefix(searchString, objectItem.attributeList);*/
+
     List<String> list = searchString.split('|');
     if (list.length < 3){
       TipsUtils.showTip(
@@ -883,7 +885,7 @@ class MesTaskSubmitController
     }
     switch (list[1]){
       case 'T':
-        //region 工序条码 610001
+      //region 工序条码 610001
         if (list.length == 4){
           if (list[2] == '610001'){
             if (submitModel.workBillEntryId == list[3]){
@@ -893,12 +895,12 @@ class MesTaskSubmitController
             }
             ///获取指定工序明细ID的派工单
             var taskRes = await MoTaskRepository().getPageList(PageConfig(
-              page: 1, rows: 1,
-              queryData: {
-                'progid': 650011,
-                'ExtOpFlag': 0, ///ExtOpFlag=0 去除委外
-                'MoOpId': list[3],
-              }
+                page: 1, rows: 1,
+                queryData: {
+                  'progid': 650011,
+                  'ExtOpFlag': 0, ///ExtOpFlag=0 去除委外
+                  'MoOpId': list[3],
+                }
             ));
             if (!taskRes.isSuccess){
               TipsUtils.showTip(
@@ -951,7 +953,7 @@ class MesTaskSubmitController
         //endregion
         break;
       case 'F':
-        //region 生产派工单条码 650011
+      //region 生产派工单条码 650011
         if (list.length == 4){
           if (list[2] == '650011'){
             if (submitModel.taskId == list[3]){
@@ -1011,7 +1013,7 @@ class MesTaskSubmitController
         //endregion
         break;
       case 'IP':
-        //region 员工卡号
+      //region 员工卡号
         if (wcDataReportType == 2){
           TipsUtils.showTip(
             msg: '当前报工方式不需要选择员工！',
@@ -1065,7 +1067,7 @@ class MesTaskSubmitController
         //endregion
         break;
       case 'G':
-        //region 员工条码
+      //region 员工条码
         if (wcDataReportType == 2){
           TipsUtils.showTip(
             msg: '当前报工方式不需要选择员工！',
@@ -1119,7 +1121,7 @@ class MesTaskSubmitController
         //endregion
         break;
       case 'E':
-        //region 设备条码
+      //region 设备条码
         if (taskOpenType == 1){
           TipsUtils.showTip(
             msg: '当前报工方式不能选择设备！',
@@ -1190,7 +1192,7 @@ class MesTaskSubmitController
         //endregion
         break;
       case 'L':
-        //region 产线、加工中心、班组
+      //region 产线、加工中心、班组
         String lineCode = list[2];
         var wcRes = await MoBeltLineRepository().getFormData('', '', {'LineCode': lineCode}, 0);
         if (!wcRes.isSuccess){
@@ -1226,7 +1228,7 @@ class MesTaskSubmitController
           return;
         }
         switch (wcDataReportType){
-          //region
+        //region
           case 0: ///产线
             MoBeltLineModel model = MoBeltLineModel.fromJson(wcRes.data.toJson());
             await lineAdapter?.validViewValue([model]);
@@ -1242,12 +1244,12 @@ class MesTaskSubmitController
             await teamGroupAdapter?.validViewValue([model]);
             await teamGroupOnChanged(model);
             break;
-          //endregion
+        //endregion
         }
         //endregion
         break;
       case 'X':
-        //region 生产序列号条码
+      //region 生产序列号条码
         if (submitType != AppConfig.serialNumberSubmit && submitType != AppConfig.singleBoxSerialNumberSubmit){
           TipsUtils.showTip(
             msg: '当前报工方式不需要选择生产序列号！',
@@ -1849,24 +1851,24 @@ class MesTaskSubmitController
           NumPadUtil.qty: numPadReportItem(context, NumPadUtil.qty),
         }
       else if (submitType == AppConfig.palletSubmit)
-        ...{
-          NumPadUtil.singleBoxQty: singleBoxQtyReportItem(context),
-          NumPadUtil.lastBoxQty: numPadReportItem(context, NumPadUtil.lastBoxQty),
-          NumPadUtil.boxNumOfPallet: numPadReportItem(context, NumPadUtil.boxNumOfPallet),
-          NumPadUtil.boxWeight: numPadReportItem(context, NumPadUtil.boxWeight),
-          NumPadUtil.qty: numPadReportItem(context, NumPadUtil.qty),
-        }
-        else if (submitType == AppConfig.serialNumberSubmit)
           ...{
-            NumPadUtil.qty: numPadReportItem(context, NumPadUtil.qty),
-          }
-        else if (submitType == AppConfig.singleBoxSerialNumberSubmit)
-          ...{
-            NumPadUtil.pieceWeight: numPadReportItem(context, NumPadUtil.pieceWeight),
             NumPadUtil.singleBoxQty: singleBoxQtyReportItem(context),
+            NumPadUtil.lastBoxQty: numPadReportItem(context, NumPadUtil.lastBoxQty),
+            NumPadUtil.boxNumOfPallet: numPadReportItem(context, NumPadUtil.boxNumOfPallet),
+            NumPadUtil.boxWeight: numPadReportItem(context, NumPadUtil.boxWeight),
             NumPadUtil.qty: numPadReportItem(context, NumPadUtil.qty),
-            NumPadUtil.weight: numPadReportItem(context, NumPadUtil.weight, hintText: '选填'),
           }
+        else if (submitType == AppConfig.serialNumberSubmit)
+            ...{
+              NumPadUtil.qty: numPadReportItem(context, NumPadUtil.qty),
+            }
+          else if (submitType == AppConfig.singleBoxSerialNumberSubmit)
+              ...{
+                NumPadUtil.pieceWeight: numPadReportItem(context, NumPadUtil.pieceWeight),
+                NumPadUtil.singleBoxQty: singleBoxQtyReportItem(context),
+                NumPadUtil.qty: numPadReportItem(context, NumPadUtil.qty),
+                NumPadUtil.weight: numPadReportItem(context, NumPadUtil.weight, hintText: '选填'),
+              }
     });
     formTitleMap.forEach((key, value) {
       if (itemAreaWidgetMap.containsKey(key)){
@@ -1930,7 +1932,7 @@ class MesTaskSubmitController
 
   Widget numPadAreaWidget(BuildContext context){
     if (submitType == AppConfig.singleBoxSerialNumberSubmit){
-      return snViewWidget(context);
+      return SizedBox();
     }
     return super.numPadAreaWidget(context);
   }

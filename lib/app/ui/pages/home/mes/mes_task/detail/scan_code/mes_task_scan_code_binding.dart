@@ -2,7 +2,7 @@ import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/scan_code/mes_task
 import 'package:get/get.dart';
 
 
-///生产 派工单报工页面
+///报工扫码页面
 class MesTaskScanCodeBinding implements Bindings{
   @override
   void dependencies() {

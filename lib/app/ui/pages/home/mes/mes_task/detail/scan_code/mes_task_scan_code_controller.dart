@@ -57,6 +57,7 @@ class MesTaskScanCodeController
         SubmitInterface, MesSubmitInterface, MesTaskSubmitInterface,
         InterfaceUtil {
 
+
   late final MesTaskDetailTabController mesTaskDetailTabController;
 
   ///0：生产派工； 1：设备派工； 2：加工中心派工

@@ -1,0 +1,2 @@
+2026-07-24 15:33:04.906779: 版本更新检查成功！最新版本：{HasUpdate: true, IsIgnorable: true, Code: 0, Msg: , UpdateStatus: 1, VersionCode: 266, VersionName: 1.6.0+266, ModifyContent: 更新测试, DescriptionUrl: null, DownloadUrl: http://123.60.78.67:8082/Upload/AppUpdate/Desktop/ReleaseV1.6.266.zip, ApkSize: 56168, ApkMd5: abd88d4d163e21edcc02a99026724e19, Reboot: true, RetryUrl: , DBMSVersion: }。
+
