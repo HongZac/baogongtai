@@ -1,0 +1,269 @@
+name: desktop
+description: 车间工作台.
+
+# The following line prevents the package from being accidentally published to
+# pub.dev using `pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# 1.1 flutter 2.8.1 =>2.10.1
+#同时在 windows/runner/Runner.rc 中修改版本号
+version: 2.7.0+272
+environment:
+  sdk: ">=2.19.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_web_plugins:
+    sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
+
+  #Portal公用基本模块,包括：dio,address service,modal,repository
+  basement:
+    path: ../basement
+
+
+  #GetX 主框架
+  get: ^4.7.3
+  #shared_preferences
+  get_storage: ^2.1.1
+
+  #事件总线，消息传替
+  #An Event Bus follows the publish/subscribe pattern
+  event_bus: ^2.0.1
+
+  ##系统提示音CMakeLists
+  #提示声音，对应需要内置声音资源
+  soundpool: ^2.4.1
+
+  #playing alert sounds and showing alert dialogs on various platforms including iOS, Android, Windows, macOS and Linux
+  #调用原生 API 来播放警报声音和显示警报对话框
+  flutter_platform_alert: ^0.8.0
+
+  #软件包信息
+  package_info_plus: ^8.3.0
+
+  ##消息提示
+  fluttertoast: ^9.0.0
+  #进度提示
+  flutter_spinkit: ^5.2.2
+
+  #字体管理
+  google_fonts: ^8.0.2
+
+  syncfusion_flutter_charts: ^33.1.47
+  syncfusion_flutter_pdfviewer: ^33.1.47
+
+  cached_network_image: ^3.4.1
+  photo_view: ^0.15.0
+
+  #路径查找，不支持web
+  path_provider: ^2.1.5
+
+  #flutter_xupdate更新
+  flutter_xupdate: #^3.0.0
+    git:
+      #url: https://github.com/Winky370/xupdate.git # flutter 3.19.6 时使用
+      url: https://github.com/yuyaohongzheng/xupdate.git
+
+  web_socket_channel: ^3.0.3
+  #web_socket_channel 的封装，包括自动重新连接逻辑
+  #web_socket_client: 0.1.1
+
+  #支持windows
+  easy_refresh: ^3.5.0
+
+  #Tab/TabBar/TabView官方扩展库，支持当前滚动时滚动祖先或子标签，并设置滚动方向和缓存范围
+  extended_tabs: ^5.0.0
+
+  #pdf文件生成（引用dart-pdf）预览,打印组件
+  #https://pub.flutter-io.cn/publishers/nfet.net/packages
+  printing: ^5.14.3
+  xml: ^6.6.1
+
+  #TextField状态控制
+  textfield_state: ^0.3.0
+
+  #闪烁文本
+  blinking_text: ^1.0.4
+
+  #windows 窗体管理工具，调协title,size,和获取窗体事件
+  window_manager: ^0.5.1
+
+  ##Flutter汉字转拼音
+  lpinyin: ^2.0.3
+
+  #语音播报,支持android、ios、kisWeb、Windows
+  #todo https://github.com/dlutton/flutter_tts/issues/583 V4.2.2~V4.2.5 在调用 speak 之前调用 stop，程序会崩溃
+  flutter_tts: 4.0.2
+
+  #微软公司(microsoft.com)提供的icon图标
+  #图标查阅 https://github.com/microsoft/fluentui-system-icons/blob/master/icons_regular.md
+  fluentui_system_icons: ^1.1.273
+
+  #发现网络连接配置：区分WI-FI和蜂窝网络，检查WI-FI状态等。
+  connectivity_plus: ^6.1.1
+
+  #通过打开一个指向指定地址列表的套接字来检查互联网
+  internet_connection_checker: ^3.0.1
+
+  #自动调整大小文本
+  auto_size_text: ^3.0.0
+
+  sn_progress_dialog: ^1.2.0
+
+  ##时间轴显示
+  timeline_tile: ^2.0.0
+
+  # url启动器 用外部浏览器打开url
+  url_launcher: ^6.3.2
+
+  #用于TCP连接的纯Dart客户端类，用于管理与服务器的连接、重新连接、发送和接收数据。
+  tcp_client_dart: ^0.2.0
+
+  #在网格中排列按钮的Flutter小部件，它对于制作数字键盘、计算器等非常有用
+  flutter_grid_button: ^2.3.1
+
+  #颜色选择器
+  flex_color_picker: ^3.8.0
+
+  #单级的弹出菜单
+  context_menus: ^2.0.0+1
+
+  intl: ^0.20.2
+
+  #强制Windows应用程序的单个实例，在打开新实例时将现有窗口置于最前面。
+  windows_single_instance: ^1.1.0
+
+  #允许您使用本机文件资源管理器选择单个或多个文件，并提供扩展筛选支持 文件夹选择不支持Web
+  file_picker: ^11.0.2
+
+  #用于实现两级列表的拖放重新排序
+  drag_and_drop_lists: ^0.4.2
+
+  #一个能够检测其子元素可见性并通知回调的小部件
+  visibility_detector: ^0.4.0+2
+
+  #串口应用，不支持web
+  flutter_libserialport: ^0.6.0
+  #串口应用，android 用
+  usb_serial: ^0.5.2
+  #libserialport_plus: 0.1.0
+
+  #轮播图
+  carousel_slider: ^5.1.2
+
+  #text_scroll: ^0.2.1
+
+  #界面分割，左右分，上下分。
+  multi_split_view: ^3.6.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+# Windows 版本生成出错（printing: Build step for pdfium failed: 1）
+# 解决方法：https://github.com/DavBfr/dart_pdf/issues/1375
+#dependency_overrides:
+#  printing:
+#    git:
+#      url: https://github.com/DavBfr/dart_pdf
+#      ref: master
+#      path: printing
+
+
+# The following section is specific to Flutter.
+flutter:
+
+  generate: true
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/images/draggable.png
+    - assets/images/error.png
+    - assets/images/completed.png
+    - assets/config/layout.yaml
+    - assets/images/app_logo.png
+    - assets/images/welcome.png
+    - assets/images/logo.png
+    - assets/images/default_img.png
+    - assets/images/default_head.png
+    - assets/images/btn_qrcode.png
+    - assets/sounds/BasicError.m4a
+    - assets/sounds/member_join.m4a
+    - assets/sounds/Click.m4a
+    - assets/fonts/google_fonts/Merriweather-Regular.ttf
+    - assets/fonts/google_fonts/Eczar-Regular.ttf
+    - assets/fonts/google_fonts/Montserrat-Medium.ttf
+    - assets/fonts/google_fonts/Rubik-Bold.ttf
+    - assets/fonts/google_fonts/Merriweather-Light.ttf
+    - assets/fonts/google_fonts/RobotoCondensed-Bold.ttf
+    - assets/fonts/google_fonts/LibreFranklin-Regular.ttf
+    - assets/fonts/google_fonts/RobotoMono-Regular.ttf
+    - assets/fonts/google_fonts/LibreFranklin-ExtraBold.ttf
+    - assets/fonts/google_fonts/LibreFranklin-Bold.ttf
+    - assets/fonts/google_fonts/Oswald-SemiBold.ttf
+    - assets/fonts/google_fonts/Oswald-Medium.ttf
+    - assets/fonts/google_fonts/LibreFranklin-SemiBold.ttf
+    - assets/fonts/google_fonts/Montserrat-Bold.ttf
+    - assets/fonts/google_fonts/Merriweather-BoldItalic.ttf
+    - assets/fonts/google_fonts/Rubik-Medium.ttf
+    - assets/fonts/google_fonts/Montserrat-SemiBold.ttf
+    - assets/fonts/google_fonts/RobotoCondensed-Regular.ttf
+    - assets/fonts/google_fonts/LibreFranklin-Medium.ttf
+    - assets/fonts/google_fonts/Montserrat-Regular.ttf
+    - assets/fonts/google_fonts/Rubik-Regular.ttf
+    - assets/fonts/google_fonts/Eczar-SemiBold.ttf
+    - assets/fonts/google_fonts/WorkSans-Regular.ttf
+    - assets/fonts/google_fonts/WorkSans-Medium.ttf
+    - assets/fonts/google_fonts/WorkSans-Bold.ttf
+    - assets/fonts/google_fonts/WorkSans-Thin.ttf
+    - assets/fonts/google_fonts/WorkSans-SemiBold.ttf
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/assets-and-images/#resolution-aware.
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/assets-and-images/#from-packages
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/custom-fonts/#from-packages
+
+
+  fonts:
+    - family: MineIconFont
+      fonts:
+        - asset: assets/fonts/mine_iconfont.ttf
+    - family: FontFamilyOfSiYuanHeiTi
+      fonts:
+        - asset: assets/fonts/google_fonts/Source_Han_Sans_SC_Normal_Normal.otf
+    - family: FontFamilyOfSiYuanSongTi
+      fonts:
+        - asset: assets/fonts/google_fonts/Source_Han_Serif_SC_Light_Light.otf

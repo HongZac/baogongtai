@@ -1,0 +1,1998 @@
+import 'package:desktop/app/model/choice_chip_model.dart';
+import 'package:desktop/app/ui/pages/home/base/base_setting/base_setting_page.dart';
+import 'package:desktop/app/ui/pages/home/pmes/device/detail_board/setting/detail_setting_controller.dart';
+import 'package:desktop/app/ui/widget/mine_icon_button.dart';
+import 'package:desktop/app/ui/widget/touch_spin.dart';
+import 'package:desktop/app/utils/app_config.dart';
+import 'package:flutter/material.dart';
+
+
+///注塑 设备实时监控 设备详情、报工、报次品 设置页面
+class DeviceDetailSettingPage extends BaseSettingPage<DeviceDetailSettingController>{
+
+  @override
+  List<Widget> tabPageView(BuildContext context, DeviceDetailSettingController _) {
+    return [
+      if (_.type == 'tab')
+        ...[
+          initialIndexWidget(context, _),
+          packingWidget(context, _),
+          detailInfoFormWidget(context, _),
+          detailCommandBarWidget(context, _),
+          detailTaskListInfoFormWidget(context, _),
+          detailTaskListCommandBarWidget(context, _),
+        ],
+
+      if (_.type == 'tab' || _.type == 'submit')
+        ...[
+          submitInfoFormWidget(context, _),
+          submitBtnWidget(context, _),
+          submitFormWidget(context, _),
+          submitFormSettingWidget(context, _),
+          submitInvClassTemplateWidget(context, _),
+        ],
+      if (_.type == 'tab' || _.type == 'submitList')
+        ...[
+          submitListWidget(context, _),
+        ],
+
+      if (_.type == 'tab' || _.type == 'checkRecord')
+        ...[
+          checkRecordInfoFormWidget(context, _),
+          checkRecordBtnWidget(context, _),
+          checkRecordFormWidget(context, _),
+          checkRecordFormSettingWidget(context, _),
+          //checkRecordInvClassTemplateWidget(context, _),
+        ],
+      if (_.type == 'tab' || _.type == 'materialReject')
+        ...[
+          materialRejectInfoFormWidget(context, _),
+          materialRejectBtnWidget(context, _),
+          materialRejectFormWidget(context, _),
+          materialRejectFormSettingWidget(context, _),
+          //materialRejectInvClassTemplateWidget(context, _),
+        ],
+      if (_.type == 'tab' || _.type == 'checkRecordList')
+        ...[
+          checkRecordListWidget(context, _),
+        ],
+    ];
+  }
+
+  Widget initialIndexWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: _.detailTabList.length,
+            itemBuilder: (BuildContext context, int index){
+              ChoiceChipModel item = _.detailTabList[index];
+              return RadioListTile(
+                title: Text(
+                  item.title,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                controlAffinity: ListTileControlAffinity.trailing,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                value: index,
+                groupValue: _.initialTabIndex,
+                onChanged: (int? int){
+                  controller.initialIndexOnChanged(index);
+                },
+              );
+            },
+          )
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.initialIndexOnSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget packingWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    title: Text(
+                      '装箱单打印模板名称',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 200, height: 50,
+                        child: TextField(
+                          controller: _.packingFrxNameTC,
+                          focusNode: _.packingFrxNameFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.packingFrxName.toString(),
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.packingFrxNameTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.packingFrxNameTC.text = '';
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),
+                ],
+              ),
+            )
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.packingOnSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///设备详情-设备任务信息显示设置
+  Widget detailInfoFormWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.infoFormSettingWidget(context, _.detailInfoFormList),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.detailInfoFormSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///设备详情-设备任务按钮显示设置
+  Widget detailCommandBarWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.commandBarSettingWidget(context, _.detailCommandBarList),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.detailCommandBarOnSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///设备详情-派工单列表信息显示设置
+  Widget detailTaskListInfoFormWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.infoFormGroupSettingWidget(context, _.detailTaskListInfoFormListMap),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.detailTaskListInfoFormSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///设备详情-派工单列表按钮显示设置
+  Widget detailTaskListCommandBarWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.commandBarSettingWidget(context, _.detailTaskListCommandBarList),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.detailTaskListCommandBarOnSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///机台报工-派工信息显示设置
+  Widget submitInfoFormWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.infoFormSettingWidget(context, _.taskInfoFormListSubmit),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.submitInfoFormSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///机台报工-按钮显示设置
+  Widget submitBtnWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            children: [
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowDataReportTypeBtnSubmit,
+                onChanged: (bool? bool) {
+                  controller.isShowDataReportTypeBtnSubmitOnChanged();
+                },
+                title: Text(
+                  '显示报工方式切换按钮',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '报工方式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.mesOrderSubmitOperationWayList.length, (index) {
+                  ChoiceChipModel item = AppConfig.mesOrderSubmitOperationWayList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: item.keyName,
+                    groupValue: _.submitType,
+                    onChanged: (String? string){
+                      controller.submitTypeOnChanged(item);
+                    },
+                  );
+                }).toList(),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowMakeUpBtnSubmit,
+                onChanged: (bool? bool) {
+                  controller.isShowMakeUpBtnSubmitOnChanged();
+                },
+                title: Text(
+                  '显示“补打”按钮（当报工日期受班次影响时，始终不显示该按钮）',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowInspectFlagBtn,
+                onChanged: (bool? bool) {
+                  controller.isShowInspectFlagBtnOnChanged();
+                },
+                title: Text(
+                  '显示“需要检验”按钮',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isCanClickInspectFlagBtn,
+                onChanged: (bool? bool) {
+                  controller.isCanClickInspectFlagBtnOnChanged();
+                },
+                title: Text(
+                  '“需要检验”按钮可以点击修改',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '“需要检验”按钮的选中状态的默认值',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: Wrap(
+                  runSpacing: 6, spacing: 6,
+                  children: [
+                    FilterChip(
+                      selected: _.inspectFlagDefaultValue == null,
+                      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                      onSelected: (bool bool) {
+                        controller.inspectFlagDefaultValueOnChanged(null);
+                      },
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+                      label: Text(
+                        '无默认值',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                    FilterChip(
+                      selected: _.inspectFlagDefaultValue == true,
+                      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                      onSelected: (bool bool) {
+                        controller.inspectFlagDefaultValueOnChanged(true);
+                      },
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+                      label: Text(
+                        '默认选中',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                    FilterChip(
+                      selected: _.inspectFlagDefaultValue == false,
+                      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                      onSelected: (bool bool) {
+                        controller.inspectFlagDefaultValueOnChanged(false);
+                      },
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+                      label: Text(
+                        '默认不选中',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowGetPieceWeightBtn,
+                onChanged: (bool? bool) {
+                  controller.isShowGetPieceWeightBtnOnChanged();
+                },
+                title: Text(
+                  '显示“获取实际单重”按钮',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '报工提交按钮的显示',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.submitBtnList.length, (index){
+                  ChoiceChipModel item = AppConfig.submitBtnList[index];
+                  return SwitchListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: _.submitBtnIndex & item.sign == item.sign,
+                    onChanged: (bool boolValue){
+                      controller.submitBtnIndexOnChanged(item.sign);
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.submitBtnSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///机台报工-表单填写项显示设置
+  Widget submitFormWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.customScrollFormGroupSettingWidget(
+            context,
+            scrollController: _.submitFormScrollController,
+            sliverList: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '单列可显示的表单填写项的行数',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                    width: 190, height: 50,
+                    child: TextField(
+                      controller: _.formRowMaxCountLimitSubmitTC,
+                      focusNode: _.formRowMaxCountLimitSubmitFN,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      maxLines: 1,
+                      onChanged: (String string){
+                        controller.update();
+                      },
+                      decoration: InputDecoration(
+                        hintText: _.formRowMaxCountLimitSubmit?.toString() ?? '',
+                        hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        suffixIcon: _.formRowMaxCountLimitSubmitTC.text.isEmpty ? null : MineIconButton(
+                          icon: Icons.cancel,
+                          iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                          tooltip: '清空',
+                          onPressed: () {
+                            _.formRowMaxCountLimitSubmitTC.clear();
+                            controller.update();
+                          },
+                        ),
+                      ),
+                    )
+                ),
+              ),
+            ],
+            formTitleMap: _.formTitleMapSubmit,
+            formStyleMap: _.formStyleMapSubmit,
+            numPadFocusField: _.numPadFocusFieldSubmit,
+            numPadFocusFieldOnChanged: (String field){
+              _.numPadFocusFieldSubmit = field;
+            },
+          ),
+        ),
+        settingSaveBtnWidget(
+            context,
+            onPressed: () async {
+              await controller.submitFormSave();
+            }
+        ),
+      ],
+    );
+  }
+
+  ///机台报工-表单填写设置
+  Widget submitFormSettingWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            children: [
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '车间默认值获取方式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.depDefaultValueGetWayList.length, (index) {
+                  ChoiceChipModel item = AppConfig.depDefaultValueGetWayList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: index,
+                    groupValue: _.depGetWayIndexSubmit,
+                    onChanged: (int? int){
+                      controller.depGetWayIndexSubmitOnChanged(index);
+                    },
+                  );
+                }).toList(),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '产线数据的填报类型',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.wcDataReportTypeList.length, (index) {
+                  ChoiceChipModel item = AppConfig.wcDataReportTypeList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: index,
+                    groupValue: _.wcDataReportTypeSubmit,
+                    onChanged: (int? int){
+                      controller.wcDataReportTypeSubmitOnChanged(index);
+                    },
+                  );
+                }).toList(),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isPsnHasAdapterSubmit,
+                onChanged: (bool? bool) {
+                  controller.isPsnHasAdapterSubmitOnChanged();
+                },
+                title: Text(
+                  '生产人员填报使用选单模式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isPsnMultiSubmit,
+                onChanged: (bool? bool) {
+                  controller.isPsnMultiSubmitOnChanged();
+                },
+                title: Text(
+                  '可以选择多个生产人员',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '生产人员选单数据的筛选条件',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: [
+                  ...List.generate(AppConfig.psnGetWayList.length, (index) {
+                    ChoiceChipModel item = AppConfig.psnGetWayList[index];
+                    return RadioListTile(
+                      title: Text(
+                        item.title,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      controlAffinity: ListTileControlAffinity.trailing,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      value: index,
+                      groupValue: _.psnGetWayIndexSubmit,
+                      onChanged: (int? int){
+                        controller.psnGetWayIndexSubmitOnChanged(index);
+                      },
+                    );
+                  }).toList(),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    title: Text(
+                      '固定车间的编号',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 190, height: 50,
+                        child: TextField(
+                          controller: _.psnDepCodeSubmitTC,
+                          focusNode: _.psnDepCodeSubmitFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.psnDepCodeSubmit,
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.psnDepCodeSubmitTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.psnDepCodeSubmitTC.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    title: Text(
+                      '固定产线的编号',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 190, height: 50,
+                        child: TextField(
+                          controller: _.psnLineCodeSubmitTC,
+                          focusNode: _.psnLineCodeSubmitFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.psnLineCodeSubmit,
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.psnLineCodeSubmitTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.psnLineCodeSubmitTC.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),
+                ],
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isSaveTheLastSelectedPsnIdSubmit,
+                onChanged: (bool? bool) {
+                  controller.isSaveTheLastSelectedPsnIdSubmitOnChanged();
+                },
+                title: Text(
+                  '保存上次报工时选中的生产人员',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '“整箱箱数”可以填写的上限值',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                    width: 190, height: 50,
+                    child: TextField(
+                      controller: _.numMaxCountLimitTC,
+                      focusNode: _.numMaxCountLimitFN,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      maxLines: 1,
+                      onChanged: (String string){
+                        controller.update();
+                      },
+                      decoration: InputDecoration(
+                        hintText: _.numMaxCountLimit?.toString() ?? '',
+                        hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        suffixIcon: _.numMaxCountLimitTC.text.isEmpty ? null : MineIconButton(
+                          icon: Icons.cancel,
+                          iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                          tooltip: '清空',
+                          onPressed: () {
+                            _.numMaxCountLimitTC.clear();
+                            controller.update();
+                          },
+                        ),
+                      ),
+                    )
+                ),
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '“单箱数量”可以填写的下限值',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                    width: 190, height: 50,
+                    child: TextField(
+                      controller: _.singleBoxQtyMaxCountLimitTC,
+                      focusNode: _.singleBoxQtyMaxCountLimitFN,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      maxLines: 1,
+                      onChanged: (String string){
+                        controller.update();
+                      },
+                      decoration: InputDecoration(
+                        hintText: _.singleBoxQtyMaxCountLimit?.toString() ?? '',
+                        hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        suffixIcon: _.singleBoxQtyMaxCountLimitTC.text.isEmpty ? null : MineIconButton(
+                          icon: Icons.cancel,
+                          iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                          tooltip: '清空',
+                          onPressed: () {
+                            _.singleBoxQtyMaxCountLimitTC.clear();
+                            controller.update();
+                          },
+                        ),
+                      ),
+                    )
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '“按托报工”时，报工数据的计算方式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.calcRuleForPalletSubmitTypeList.length, (index){
+                  ChoiceChipModel item = AppConfig.calcRuleForPalletSubmitTypeList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: index,
+                    groupValue: _.calcRuleForPalletSubmitType,
+                    onChanged: (int? int){
+                      controller.calcRuleForPalletSubmitTypeOnChanged(index);
+                    },
+                  );
+                }).toList(),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isSaveTheLastPackingWeightData,
+                onChanged: (bool? bool) {
+                  controller.isSaveTheLastPackingWeightDataOnChanged();
+                },
+                title: Text(
+                  '保存上次报工时填写的皮重、单箱数量数据（或选择的装箱容器数据）',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isUsePackingPicker,
+                onChanged: (bool? bool) {
+                  controller.isUsePackingPickerOnChanged();
+                },
+                title: Text(
+                  '通过选择装箱容器，自动填充“单箱皮重”、“单箱数量”', ///“单箱皮重”填写项，改为选择装箱容器
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isSingleBoxQtyOnlyChangedByContainer,
+                onChanged: (bool? bool) {
+                  controller.isSingleBoxQtyOnlyChangedByContainerOnChanged();
+                },
+                title: Text(
+                  '“单箱数量”只能通过选择装箱容器来赋值，而不是手动输入',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isAutoWritePieceWeight,
+                onChanged: (bool? bool) {
+                  controller.isAutoWritePieceWeightOnChanged();
+                },
+                title: Text(
+                  '自动写入实际单重数据',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.qtyIsNeedPieceWeight,
+                onChanged: (bool? bool) {
+                  controller.qtyIsNeedPieceWeightOnChanged();
+                },
+                title: Text(
+                  '按数量报工时，需要产品重量检验',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.qtyCanWeightCalcByStandWeight,
+                onChanged: (bool? bool) {
+                  controller.qtyCanWeightCalcByStandWeightOnChanged();
+                },
+                title: Text(
+                  '按数量报工时，如果没有实际单重数据，可以根据标准单重计算总重',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.qtyBoxIsNeedPieceWeight,
+                onChanged: (bool? bool) {
+                  controller.qtyBoxIsNeedPieceWeightOnChanged();
+                },
+                title: Text(
+                  '按数量（多箱）报工时，需要产品重量检验',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.qtyBoxCanWeightCalcByStandWeight,
+                onChanged: (bool? bool) {
+                  controller.qtyBoxCanWeightCalcByStandWeightOnChanged();
+                },
+                title: Text(
+                  '按数量（多箱）报工时，如果没有实际单重数据，可以根据标准单重计算总重',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.palletIsNeedPieceWeight,
+                onChanged: (bool? bool) {
+                  controller.palletIsNeedPieceWeightOnChanged();
+                },
+                title: Text(
+                  '按托报工时，需要产品重量检验',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.palletCanWeightCalcByStandWeight,
+                onChanged: (bool? bool) {
+                  controller.palletCanWeightCalcByStandWeightOnChanged();
+                },
+                title: Text(
+                  '按托报工时，如果没有实际单重数据，可以根据标准单重计算总重',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.weightIsNeedPieceWeight,
+                onChanged: (bool? bool) {
+                  controller.weightIsNeedPieceWeightOnChanged();
+                },
+                title: Text(
+                  '按重量报工时，需要产品重量检验',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.weightIsAddPieceWeightToTotal,
+                onChanged: (bool? bool) {
+                  controller.weightIsAddPieceWeightToTotalOnChanged();
+                },
+                title: Text(
+                  '按重量报工时，产品称重的数据加到报工总数据上',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.weightBoxIsNeedPieceWeight,
+                onChanged: (bool? bool) {
+                  controller.weightBoxIsNeedPieceWeightOnChanged();
+                },
+                title: Text(
+                  '按重量（多箱）报工时，需要产品重量检验',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowExpectSingleBoxQty,
+                onChanged: (bool? bool) {
+                  controller.isShowExpectSingleBoxQtyOnChanged();
+                },
+                title: Text(
+                  '按多箱报工时，显示称重消息传递过来的单箱重量、预计单箱数量',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '报工单条码打印模板的文件名称',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                    width: 190, height: 50,
+                    child: TextField(
+                      controller: _.frxNameSubmitTC,
+                      focusNode: _.frxNameSubmitFN,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      maxLines: 1,
+                      onChanged: (String string){
+                        controller.update();
+                      },
+                      decoration: InputDecoration(
+                        hintText: _.frxNameSubmit,
+                        hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        suffixIcon: _.frxNameSubmitTC.text.isEmpty ? null : MineIconButton(
+                          icon: Icons.cancel,
+                          iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                          tooltip: '清空',
+                          onPressed: () {
+                            _.frxNameSubmitTC.clear();
+                            controller.update();
+                          },
+                        ),
+                      ),
+                    )
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isGetBackAfterCommitSuccessSubmit,
+                onChanged: (bool? bool) {
+                  controller.isGetBackAfterCommitSuccessSubmitOnChanged();
+                },
+                title: Text(
+                  '报工记录提交成功后，返回到首页',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+            ],
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.submitFormSettingSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///机台报工-产品类别打印模板设置
+  Widget submitInvClassTemplateWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.invClassFrxNameMapSettingWidget(
+            context,
+            _.invClassFrxNameMapSubmit,
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.submitInvClassTemplateSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///报工单列表设置
+  Widget submitListWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.customScrollInfoFormGroupSettingWidget(
+            context,
+            scrollController: _.submitListScrollController,
+            sliverList: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '单页显示记录数',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                  width: 180,
+                  child: TouchSpin(
+                    width: 70,
+                    numValue: _.pageConfigRowsSubmit.toDouble(),
+                    numMin: 1,
+                    step: 1,
+                    point: 0,
+                    textStyle: Theme.of(context).textTheme.titleLarge,
+                    iconSize: Theme.of(context).textTheme.titleLarge!.fontSize! * 1.43,
+                    addIcon: const Icon(Icons.add_circle_outline),
+                    subtractIcon: const Icon(Icons.remove_circle_outline),
+                    canInput: false,
+                    numOnChanged: (value){
+                      controller.pageConfigRowsSubmitOnChanged(value.toInt());
+                    },
+                  ),
+                ),
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '报工单删除时间限制（秒）',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                    width: 190, height: 50,
+                    child: TextField(
+                      controller: _.limitTimeSubmitTC,
+                      focusNode: _.limitTimeSubmitFN,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      maxLines: 1,
+                      onChanged: (String string){
+                        controller.update();
+                      },
+                      decoration: InputDecoration(
+                        hintText: _.limitTimeSubmit?.toString() ?? '',
+                        hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        suffixIcon: _.limitTimeSubmitTC.text.isEmpty ? null : MineIconButton(
+                          icon: Icons.cancel,
+                          iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                          tooltip: '清空',
+                          onPressed: () {
+                            _.limitTimeSubmitTC.clear();
+                            controller.update();
+                          },
+                        ),
+                      ),
+                    )
+                ),
+              ),
+            ],
+            infoFormListMap: _.submitListInfoFormListMap,
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.submitListSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///次品录入-派工信息显示设置
+  Widget checkRecordInfoFormWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.infoFormSettingWidget(context, _.taskInfoFormListCR),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.checkRecordInfoFormSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///次品录入-按钮显示设置
+  Widget checkRecordBtnWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            children: [
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowDataReportTypeBtnCR,
+                onChanged: (bool? bool) {
+                  controller.isShowDataReportTypeBtnCROnChanged();
+                },
+                title: Text(
+                  '显示报次品方式切换按钮',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '报次品方式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.pMesTaskCROperationWayList.length, (index) {
+                  ChoiceChipModel item = AppConfig.pMesTaskCROperationWayList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: item.keyName,
+                    groupValue: _.checkRecordType,
+                    onChanged: (String? string){
+                      controller.checkRecordTypeOnChanged(item);
+                    },
+                  );
+                }).toList(),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowMakeUpBtnCR,
+                onChanged: (bool? bool) {
+                  controller.isShowMakeUpBtnCROnChanged();
+                },
+                title: Text(
+                  '显示“补打”按钮（当生产日期受班次影响时，始终不显示该按钮）',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '次品记录提交按钮的显示',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.checkRecordBtnList.length, (index){
+                  ChoiceChipModel item = AppConfig.checkRecordBtnList[index];
+                  return SwitchListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: _.checkRecordBtnIndex & item.sign == item.sign,
+                    onChanged: (bool boolValue){
+                      controller.checkRecordBtnIndexOnChanged(item.sign);
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.checkRecordBtnSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///次品录入-表单填写项显示设置
+  Widget checkRecordFormWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.customScrollFormGroupSettingWidget(
+            context,
+            scrollController: _.submitFormScrollController,
+            sliverList: [
+              /*ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    title: Text(
+                      '单列可显示的表单填写项的行数',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 190, height: 50,
+                        child: TextField(
+                          controller: _.formRowMaxCountLimitCRTC,
+                          focusNode: _.formRowMaxCountLimitCRFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.formRowMaxCountLimitCR?.toString() ?? '',
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.formRowMaxCountLimitCRTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.formRowMaxCountLimitCRTC.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),*/
+            ],
+            formTitleMap: _.formTitleMapCR,
+            formStyleMap: _.formStyleMapCR,
+            numPadFocusField: _.numPadFocusFieldCR,
+            numPadFocusFieldOnChanged: (String field){
+              _.numPadFocusFieldCR = field;
+            },
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.checkRecordFormSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///次品录入-表单填写设置
+  Widget checkRecordFormSettingWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            children: [
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '车间默认值获取方式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.depDefaultValueGetWayList.length, (index) {
+                  ChoiceChipModel item = AppConfig.depDefaultValueGetWayList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: index,
+                    groupValue: _.depGetWayIndexCR,
+                    onChanged: (int? int){
+                      controller.depGetWayIndexCROnChanged(index);
+                    },
+                  );
+                }).toList(),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '产线数据的填报类型',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.wcDataReportTypeList.length, (index) {
+                  ChoiceChipModel item = AppConfig.wcDataReportTypeList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: index,
+                    groupValue: _.wcDataReportTypeCR,
+                    onChanged: (int? int){
+                      controller.wcDataReportTypeCROnChanged(index);
+                    },
+                  );
+                }).toList(),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isPsnHasAdapterCR,
+                onChanged: (bool? bool) {
+                  controller.isPsnHasAdapterCROnChanged();
+                },
+                title: Text(
+                  '生产人员填报使用选单模式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isPsnMultiCR,
+                onChanged: (bool? bool) {
+                  controller.isPsnMultiCROnChanged();
+                },
+                title: Text(
+                  '可以选择多个生产人员',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '生产人员选单数据的筛选条件',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: [
+                  ...List.generate(AppConfig.psnGetWayList.length, (index) {
+                    ChoiceChipModel item = AppConfig.psnGetWayList[index];
+                    return RadioListTile(
+                      title: Text(
+                        item.title,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      controlAffinity: ListTileControlAffinity.trailing,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      value: index,
+                      groupValue: _.psnGetWayIndexCR,
+                      onChanged: (int? int){
+                        controller.psnGetWayIndexCROnChanged(index);
+                      },
+                    );
+                  }).toList(),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    title: Text(
+                      '固定车间的编号',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 190, height: 50,
+                        child: TextField(
+                          controller: _.psnDepCodeCRTC,
+                          focusNode: _.psnDepCodeCRFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.psnDepCodeCR,
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.psnDepCodeCRTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.psnDepCodeCRTC.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    title: Text(
+                      '固定产线的编号',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 190, height: 50,
+                        child: TextField(
+                          controller: _.psnLineCodeCRTC,
+                          focusNode: _.psnLineCodeCRFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.psnLineCodeCR,
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.psnLineCodeCRTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.psnLineCodeCRTC.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),
+                ],
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isSaveTheLastSelectedPsnIdCR,
+                onChanged: (bool? bool) {
+                  controller.isSaveTheLastSelectedPsnIdCROnChanged();
+                },
+                title: Text(
+                  '保存上次报次品时选中的生产人员',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '次品条码打印模板的文件名称',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                    width: 190, height: 50,
+                    child: TextField(
+                      controller: _.frxNameCRTC,
+                      focusNode: _.frxNameCRFN,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      maxLines: 1,
+                      onChanged: (String string){
+                        controller.update();
+                      },
+                      decoration: InputDecoration(
+                        hintText: _.frxNameCR,
+                        hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        suffixIcon: _.frxNameCRTC.text.isEmpty ? null : MineIconButton(
+                          icon: Icons.cancel,
+                          iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                          tooltip: '清空',
+                          onPressed: () {
+                            _.frxNameCRTC.clear();
+                            controller.update();
+                          },
+                        ),
+                      ),
+                    )
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isGetBackAfterCommitSuccessCR,
+                onChanged: (bool? bool) {
+                  controller.isGetBackAfterCommitSuccessCROnChanged();
+                },
+                title: Text(
+                  '次品记录提交成功后，返回到首页',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+            ],
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.checkRecordFormSettingSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///次品录入-产品类别打印模板设置
+  Widget checkRecordInvClassTemplateWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.invClassFrxNameMapSettingWidget(
+            context,
+            _.invClassFrxNameMapCR,
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.checkRecordInvClassTemplateSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///材料不良-任务信息显示设置
+  Widget materialRejectInfoFormWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.infoFormSettingWidget(context, _.taskInfoFormListMR),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.mRInfoFormSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///材料不良-按钮显示设置
+  Widget materialRejectBtnWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            children: [
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowDataReportTypeBtnMR,
+                onChanged: (bool? bool) {
+                  controller.isShowDataReportTypeBtnMROnChanged();
+                },
+                title: Text(
+                  '显示不良品上报方式切换按钮',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '不良品上报方式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.mesTaskMROperationWayList.length, (index) {
+                  ChoiceChipModel item = AppConfig.mesTaskMROperationWayList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: item.keyName,
+                    groupValue: _.checkRecordTypeMR,
+                    onChanged: (String? string){
+                      controller.checkRecordTypeMROnChanged(item);
+                    },
+                  );
+                }).toList(),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isShowMakeUpBtnMR,
+                onChanged: (bool? bool) {
+                  controller.isShowMakeUpBtnMROnChanged();
+                },
+                title: Text(
+                  '显示“补打”按钮（当生产日期受班次影响时，始终不显示该按钮）',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '不良品记录提交按钮的显示',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.materialRejectBtnList.length, (index){
+                  ChoiceChipModel item = AppConfig.materialRejectBtnList[index];
+                  return SwitchListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: _.checkRecordBtnIndexMR & item.sign == item.sign,
+                    onChanged: (bool boolValue){
+                      controller.checkRecordBtnIndexMROnChanged(item.sign);
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4,),
+
+        FilledButton(
+          onPressed: () async{
+            await controller.mRBtnSave();
+          },
+          style: ButtonStyle(
+            minimumSize: WidgetStateProperty.all(
+                const Size(2000, 70)
+            ),
+          ),
+          child: Text(
+            '确认修改',
+            style: TextStyle(
+              fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  ///材料不良-表单填写项显示设置
+  Widget materialRejectFormWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.customScrollFormGroupSettingWidget(
+            context,
+            scrollController: _.mRFormScrollController,
+            sliverList: [
+              /*ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    title: Text(
+                      '单列可显示的表单填写项的行数',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 190, height: 50,
+                        child: TextField(
+                          controller: _.formRowMaxCountLimitMRTC,
+                          focusNode: _.formRowMaxCountLimitMRFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.formRowMaxCountLimitMR?.toString() ?? '',
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.formRowMaxCountLimitMRTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.formRowMaxCountLimitMRTC.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),*/
+            ],
+            formTitleMap: _.formTitleMapMR,
+            formStyleMap: _.formStyleMapMR,
+            numPadFocusField: _.numPadFocusFieldMR,
+            numPadFocusFieldOnChanged: (String field){
+              _.numPadFocusFieldMR = field;
+            },
+          ),
+        ),
+        settingSaveBtnWidget(
+            context,
+            onPressed: () async {
+              await controller.mRFormSave();
+            }
+        ),
+      ],
+    );
+  }
+
+  ///材料不良-表单填写设置
+  Widget materialRejectFormSettingWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            children: [
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '车间默认值获取方式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: List.generate(AppConfig.depDefaultValueGetWayList.length, (index) {
+                  ChoiceChipModel item = AppConfig.depDefaultValueGetWayList[index];
+                  return RadioListTile(
+                    title: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    value: index,
+                    groupValue: _.depGetWayIndexMR,
+                    onChanged: (int? int){
+                      controller.depGetWayIndexMROnChanged(index);
+                    },
+                  );
+                }).toList(),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isPsnHasAdapterMR,
+                onChanged: (bool? bool) {
+                  controller.isPsnHasAdapterMROnChanged();
+                },
+                title: Text(
+                  '生产人员填报使用选单模式',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isPsnMultiMR,
+                onChanged: (bool? bool) {
+                  controller.isPsnMultiMROnChanged();
+                },
+                title: Text(
+                  '可以选择多个生产人员',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '生产人员选单数据的筛选条件',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                children: [
+                  ...List.generate(AppConfig.psnGetWayListForMR.length, (index) {
+                    ChoiceChipModel item = AppConfig.psnGetWayListForMR[index];
+                    return RadioListTile(
+                      title: Text(
+                        item.title,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      controlAffinity: ListTileControlAffinity.trailing,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      value: index,
+                      groupValue: _.psnGetWayIndexMR,
+                      onChanged: (int? int){
+                        controller.psnGetWayIndexMROnChanged(index);
+                      },
+                    );
+                  }).toList(),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    title: Text(
+                      '固定车间的编号',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 190, height: 50,
+                        child: TextField(
+                          controller: _.psnDepCodeMRTC,
+                          focusNode: _.psnDepCodeMRFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.psnDepCodeMR,
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.psnDepCodeMRTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.psnDepCodeMRTC.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    title: Text(
+                      '固定产线的编号',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: SizedBox(
+                        width: 190, height: 50,
+                        child: TextField(
+                          controller: _.psnLineCodeMRTC,
+                          focusNode: _.psnLineCodeMRFN,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          maxLines: 1,
+                          onChanged: (String string){
+                            controller.update();
+                          },
+                          decoration: InputDecoration(
+                            hintText: _.psnLineCodeMR,
+                            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: _.psnLineCodeMRTC.text.isEmpty ? null : MineIconButton(
+                              icon: Icons.cancel,
+                              iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                              tooltip: '清空',
+                              onPressed: () {
+                                _.psnLineCodeMRTC.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        )
+                    ),
+                  ),
+                ],
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isSaveTheLastSelectedPsnIdMR,
+                onChanged: (bool? bool) {
+                  controller.isSaveTheLastSelectedPsnIdMROnChanged();
+                },
+                title: Text(
+                  '保存上次不良品上报时选中的生产人员',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '不良品上报条码打印模板的文件名称',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                    width: 190, height: 50,
+                    child: TextField(
+                      controller: _.frxNameMRTC,
+                      focusNode: _.frxNameMRFN,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      maxLines: 1,
+                      onChanged: (String string){
+                        controller.update();
+                      },
+                      decoration: InputDecoration(
+                        hintText: _.frxNameMR,
+                        hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        suffixIcon: _.frxNameMRTC.text.isEmpty ? null : MineIconButton(
+                          icon: Icons.cancel,
+                          iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                          tooltip: '清空',
+                          onPressed: () {
+                            _.frxNameMRTC.clear();
+                            controller.update();
+                          },
+                        ),
+                      ),
+                    )
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                value: _.isGetBackAfterCommitSuccessMR,
+                onChanged: (bool? bool) {
+                  controller.isGetBackAfterCommitSuccessMROnChanged();
+                },
+                title: Text(
+                  '不良品记录提交成功后，返回到首页',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4,),
+
+        FilledButton(
+          onPressed: () async{
+            await controller.mRFormSettingSave();
+          },
+          style: ButtonStyle(
+            minimumSize: WidgetStateProperty.all(
+                const Size(2000, 70)
+            ),
+          ),
+          child: Text(
+            '确认修改',
+            style: TextStyle(
+              fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  ///材料不良-产品类别打印模板设置
+  Widget materialRejectInvClassTemplateWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.invClassFrxNameMapSettingWidget(
+            context,
+            _.invClassFrxNameMapMR,
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.mRInvClassTemplateSave();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///次品单列表设置
+  Widget checkRecordListWidget(BuildContext context, DeviceDetailSettingController _){
+    return Column(
+      children: [
+        Expanded(
+          child: controller.customScrollInfoFormGroupSettingWidget(
+            context,
+            scrollController: _.checkRecordListScrollController,
+            sliverList: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '单页显示记录数',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                  width: 180,
+                  child: TouchSpin(
+                    width: 70,
+                    numValue: _.pageConfigRowsCR.toDouble(),
+                    numMin: 1,
+                    step: 1,
+                    point: 0,
+                    textStyle: Theme.of(context).textTheme.titleLarge,
+                    iconSize: Theme.of(context).textTheme.titleLarge!.fontSize! * 1.43,
+                    addIcon: const Icon(Icons.add_circle_outline),
+                    subtractIcon: const Icon(Icons.remove_circle_outline),
+                    canInput: false,
+                    numOnChanged: (value){
+                      controller.pageConfigRowsCROnChanged(value.toInt());
+                    },
+                  ),
+                ),
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                title: Text(
+                  '次品记录删除时间限制（秒）',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                trailing: SizedBox(
+                    width: 190, height: 50,
+                    child: TextField(
+                      controller: _.limitTimeCRTC,
+                      focusNode: _.limitTimeCRFN,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      maxLines: 1,
+                      onChanged: (String string){
+                        controller.update();
+                      },
+                      decoration: InputDecoration(
+                        hintText: _.limitTimeCR?.toString() ?? '',
+                        hintStyle: Theme.of(context).inputDecorationTheme.hintStyle!.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        suffixIcon: _.limitTimeCRTC.text.isEmpty ? null : MineIconButton(
+                          icon: Icons.cancel,
+                          iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                          tooltip: '清空',
+                          onPressed: () {
+                            _.limitTimeCRTC.clear();
+                            controller.update();
+                          },
+                        ),
+                      ),
+                    )
+                ),
+              ),
+            ],
+            infoFormListMap: _.checkRecordListInfoFormListMap,
+          ),
+        ),
+        settingSaveBtnWidget(
+          context,
+          onPressed: () async {
+            await controller.checkRecordListSave();
+          },
+        ),
+      ],
+    );
+  }
+
+}
