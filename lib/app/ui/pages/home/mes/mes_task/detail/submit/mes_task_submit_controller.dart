@@ -31,6 +31,7 @@ import 'package:desktop/app/ui/pages/home/mes/mes_device_task/detail/device_deta
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/check_record/mes_task_check_record_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/detail_tab/mes_task_detail_tab_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/material_reject/mes_task_material_reject_controller.dart';
+import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/scan_code/mes_task_scan_code_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/mes_task_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_work_center/mes_work_center_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/submit_list/mes_submit_list_controller.dart';
@@ -58,6 +59,7 @@ class MesTaskSubmitController
         InterfaceUtil {
 
   late final MesTaskDetailTabController mesTaskDetailTabController;
+
 
   ///0：生产派工； 1：设备派工； 2：加工中心派工
   ///
@@ -720,6 +722,11 @@ class MesTaskSubmitController
             isWeightError = _pieceWeight != 0
                 && ((inventoryModel.invWeight ?? 0) / _pieceWeight - 1).abs() > (limitWeightDeviationValue / 100);
             break;
+            case NumPadUtil.singleBoxQty:
+              int _singleBoxQty = int.tryParse(NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '') ?? 0;
+              String _qtyString = _singleBoxQty > 0 ? _singleBoxQty.toString() : '';
+              NumPadUtil().setText(NumPadUtil.qty, _qtyString, numPadCTList);
+              break;
         }
       }
 
@@ -1492,6 +1499,52 @@ class MesTaskSubmitController
       return;
     }
     isLoading = true;
+
+    late final MesTaskScanCodeController mesTaskScanCodeController;
+
+    try{
+      mesTaskScanCodeController = Get.find<MesTaskScanCodeController>();
+    } catch (e){
+      ToastNotification(Get.overlayContext!).warn('请先报工扫码!');
+      isLoading = false;
+      return;
+    }
+
+
+    List<String> remainingCodeList = [];
+
+    if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)){
+      String singleBoxQtyString = NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '';
+      int? singleBoxQty = int.tryParse(singleBoxQtyString);
+      if (singleBoxQty == null || singleBoxQty < 1){
+        TipsUtils.showTip(
+          msg: '请输入单箱数量！',
+          toastType: ToastType.warn,
+        );
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return;
+      }
+
+      String serialNumber = '';
+      String code = mesTaskScanCodeController.submitModel.serialNumber ?? '';
+      List<String> codeList = code.split(',');
+
+      if(codeList.length >= singleBoxQty ) {
+        List<String> firstList = codeList.take(singleBoxQty).toList();
+        List<String> reList = codeList.skip(singleBoxQty).toList();
+        serialNumber = firstList.join(',');
+        remainingCodeList.addAll(reList);
+
+      }else {
+        serialNumber = codeList.join(',');
+        remainingCodeList.addAll([]);
+
+      }
+
+      submitModel.serialNumber = serialNumber;
+    }
+
     if (!byAutoSubmit){
       ///报工提交前检查
       Map<bool, String> checkMap = submitCheck(
@@ -1531,6 +1584,7 @@ class MesTaskSubmitController
         //endregion
       }
     }
+
     var dialogRes = await submitSaveConfirmationDialog(isPrint, byAutoSubmit: byAutoSubmit);
     if (!dialogRes){
       isLoading = false;
@@ -1561,6 +1615,7 @@ class MesTaskSubmitController
     //region 提交报工记录
     setSubmitDataBeforeSave();
     var res = await MoOpSubmitRepository().submitFormData(submitModel, bMoSN: isBMoSN);
+
     if (!res.isSuccess){
       if (byAutoSubmit){
         ///自动报工，提交失败时，也要清空填写的序列号
@@ -1575,6 +1630,14 @@ class MesTaskSubmitController
       isLoading = false;
       return;
     }
+
+    List<MoOrderSNModel> modelList = [];
+    for(var e in remainingCodeList){
+      modelList.add(MoOrderSNModel(id: e, code: e));
+    }
+    await mesTaskScanCodeController.orderSNAdapter?.validViewValue(modelList);
+    mesTaskScanCodeController.orderSNOnChanged(modelList);
+
     List<String> submitResDataList = (res.data.data?.toString() ?? '').isEmpty
         ? []
         : res.data.data!.toString().split(',');

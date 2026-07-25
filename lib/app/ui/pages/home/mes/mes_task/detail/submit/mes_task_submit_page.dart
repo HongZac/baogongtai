@@ -39,18 +39,18 @@ class MesTaskSubmitPage extends BaseFormPage<MesTaskSubmitController>{
           ],
         ),
 
-        ///自动提交是否成功的闪烁反馈
-        if ((_.submitType == AppConfig.serialNumberSubmit || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
-            && _.autoCommitSubmit
-            && _.isAutoCommitSuccess != null)
-          Positioned.fill(
-            child: BlinkWidget(
-              isBlink: true,
-              rate: 700,
-              blinkColor: _.isAutoCommitSuccess! ? AppColors.runColor : null,
-              child: const SizedBox.shrink(),
-            ),
-          ),
+        // ///自动提交是否成功的闪烁反馈
+        // if ((_.submitType == AppConfig.serialNumberSubmit || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
+        //     && _.autoCommitSubmit
+        //     && _.isAutoCommitSuccess != null)
+        //   Positioned.fill(
+        //     child: BlinkWidget(
+        //       isBlink: true,
+        //       rate: 700,
+        //       blinkColor: _.isAutoCommitSuccess! ? AppColors.runColor : null,
+        //       child: const SizedBox.shrink(),
+        //     ),
+        //   ),
       ],
     );
   }
@@ -268,20 +268,20 @@ class MesTaskSubmitPage extends BaseFormPage<MesTaskSubmitController>{
                 if (_.isShowMutualInspectionBtn)
                   _.mutualInspectionBtnWidget(context),
 
-                ///自动提交（按序列号报工时使用）
-                if ((_.submitType == AppConfig.serialNumberSubmit
-                    || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
-                    && _.isShowAutoCommitBtn)
-                  _.autoCommitSubmitBtnWidget(context),
+                // ///自动提交（按序列号报工时使用）
+                // if ((_.submitType == AppConfig.serialNumberSubmit
+                //     || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
+                //     && _.isShowAutoCommitBtn)
+                //   _.autoCommitSubmitBtnWidget(context),
 
                 ///首检单提示
                 if (_.cannotSubmitWhenNotPassFirstInspection && (_.submitModel.taskId ?? '').isNotEmpty)
                   _.firstInspectionWidget(context),
 
                 ///序列号扫码历史提示信息
-                if (_.submitType == AppConfig.serialNumberSubmit
-                    || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
-                  _.serialNumberBarcodeMsgWidget(context),
+                // if (_.submitType == AppConfig.serialNumberSubmit
+                //     || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
+                //   _.serialNumberBarcodeMsgWidget(context),
               ],
             )
           ),

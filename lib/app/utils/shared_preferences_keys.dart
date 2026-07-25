@@ -741,6 +741,9 @@ abstract class SharedPreferencesKeys{
   ///生产派工单 派工单详情Tab页 默认显示的选项卡 int
   static const MES_TASK_DETAIL_INITIAL_INDEX_KEY = 'mes-task-detail-initial-index-key';
 
+
+  ///生产派工单 报工序列号存储 String
+  static const MES_TASK_SUBMIT_OP_SCAN_CODE_KEY = 'mes-task-submit-op-scan-code-key';
   ///生产派工单 报工 序列号校验码 String
   static const MES_TASK_SUBMIT_ASSIGNMENT_SERIAL_NUMBER_CHECK_CODE_KEY = 'mes-task-submit-assignment-serial-number-check-code-key';
   ///生产派工单 报工 报工页面显示的数据字段列表 List<Map<String, dynamic>>

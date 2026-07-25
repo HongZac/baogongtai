@@ -883,425 +883,28 @@ class MesTaskScanCodeController
       return;
     }
     switch (list[1]){
-      case 'T':
-        //region 工序条码 610001
-        if (list.length == 4){
-          if (list[2] == '610001'){
-            if (submitModel.workBillEntryId == list[3]){
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            ///获取指定工序明细ID的派工单
-            var taskRes = await MoTaskRepository().getPageList(PageConfig(
-              page: 1, rows: 1,
-              queryData: {
-                'progid': 650011,
-                'ExtOpFlag': 0, ///ExtOpFlag=0 去除委外
-                'MoOpId': list[3],
-              }
-            ));
-            if (!taskRes.isSuccess){
-              TipsUtils.showTip(
-                msg: '获取生产派工单时出错：${taskRes.message}',
-                toastType: ToastType.error,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (taskRes.rows.isEmpty){
-              TipsUtils.showTip(
-                msg: '未查询到派工单！',
-                toastType: ToastType.error,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (taskOpenType == 1 && taskRes.rows[0].deviceId != deviceId){
-              TipsUtils.showTip(
-                msg: '该派工单未派工到指定设备！',
-                toastType: ToastType.error,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            await getOtherTask(taskRes.rows[0]);
-          }
-          else {
-            TipsUtils.showTip(
-              msg: '条码错误！',
-              toastType: ToastType.warn,
-            );
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-        }
-        else {
-          TipsUtils.showTip(
-            msg: '条码错误！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        //endregion
-        break;
-      case 'F':
-        //region 生产派工单条码 650011
-        if (list.length == 4){
-          if (list[2] == '650011'){
-            if (submitModel.taskId == list[3]){
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            var taskRes = await MoTaskRepository().getFormData(list[3]);
-            if (!taskRes.isSuccess){
-              TipsUtils.showTip(
-                msg: '获取生产派工单时出错：${taskRes.message}',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (taskRes.data.taskId.isEmpty){
-              TipsUtils.showTip(
-                msg: '未查询到派工单信息！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (taskOpenType == 1 && taskRes.data.deviceId != deviceId){
-              TipsUtils.showTip(
-                msg: '该派工单未派工到指定设备！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            await getOtherTask(taskRes.data);
-          }
-          else {
-            TipsUtils.showTip(
-              msg: '条码错误！',
-              toastType: ToastType.warn,
-            );
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-        }
-        else {
-          TipsUtils.showTip(
-            msg: '条码错误！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        //endregion
-        break;
-      case 'IP':
-        //region 员工卡号
-        if (wcDataReportType == 2){
-          TipsUtils.showTip(
-            msg: '当前报工方式不需要选择员工！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        String idCode = list[2];
-        var psnRes = await PersonRepository().getFormData('', '', {'IdCode': idCode}, 0);
-        if (!psnRes.isSuccess){
-          TipsUtils.showTip(
-            msg: '获取员工数据时出错：${psnRes.message}！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (psnRes.data.id.isEmpty){
-          TipsUtils.showTip(
-            msg: '查询不到该员工！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if ((submitModel.empId ?? '').split(',').contains(psnRes.data.id)){
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (isPsnHasAdapter){
-          List<PersonModel> list = [];
-          if (isPsnMulti){
-            list = personAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
-          }
-          list.add(psnRes.data);
-          await personAdapter?.validViewValue(list);
-          await psnOnChanged(list);
-        }
-        else {
-          if (!isPsnMulti){
-            personList.clear();
-          }
-          personList.add(psnRes.data);
-          await psnOnChanged(personList);
-        }
-        //endregion
-        break;
-      case 'G':
-        //region 员工条码
-        if (wcDataReportType == 2){
-          TipsUtils.showTip(
-            msg: '当前报工方式不需要选择员工！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        String psnNum = list[2];
-        var psnRes = await PersonRepository().getFormData('', '', {'PsnNum': psnNum}, 0);
-        if (!psnRes.isSuccess){
-          TipsUtils.showTip(
-            msg: '获取员工数据时出错：${psnRes.message}！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (psnRes.data.id.isEmpty){
-          TipsUtils.showTip(
-            msg: '查询不到该员工！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if ((submitModel.empId ?? '').split(',').contains(psnRes.data.id)){
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (isPsnHasAdapter){
-          List<PersonModel> list = [];
-          if (isPsnMulti){
-            list = personAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
-          }
-          list.add(psnRes.data);
-          await personAdapter?.validViewValue(list);
-          await psnOnChanged(list);
-        }
-        else {
-          if (!isPsnMulti){
-            personList.clear();
-          }
-          personList.add(psnRes.data);
-          await psnOnChanged(personList);
-        }
-        //endregion
-        break;
-      case 'E':
-        //region 设备条码
-        if (taskOpenType == 1){
-          TipsUtils.showTip(
-            msg: '当前报工方式不能选择设备！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (wcDataReportType == 0){
-          TipsUtils.showTip(
-            msg: '当前报工方式不需要选择设备！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        String deviceInfo = list[2]; ///该值可能是 code，也可能是 id
-        if (submitModel.deviceId == deviceInfo || submitModel.deviceCode == deviceInfo){
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        EAMDeviceModel eamDeviceModel = EAMDeviceModel();
-        var deviceCodeRes = await EAMDeviceRepository().getList({'DeviceCode': deviceInfo});
-        if (!deviceCodeRes.isSuccess){
-          TipsUtils.showTip(
-            msg: '获取设备数据时出错：${deviceCodeRes.message}！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (deviceCodeRes.data.isEmpty){
-          var deviceIdRes = await EAMDeviceRepository().getModel(deviceInfo);
-          if (!deviceIdRes.isSuccess){
-            TipsUtils.showTip(
-              msg: '获取设备数据时出错：${deviceIdRes.message}！',
-              toastType: ToastType.warn,
-            );
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-          if (deviceIdRes.data.id.isEmpty){
-            TipsUtils.showTip(
-              msg: '查询不到该设备！',
-              toastType: ToastType.warn,
-            );
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-          eamDeviceModel = deviceIdRes.data;
-        }
-        else {
-          eamDeviceModel = deviceCodeRes.data[0];
-        }
-        if (isDeviceHasAdapter){
-          await deviceAdapter?.validViewValue([eamDeviceModel]);
-        }
-        else {
-          deviceModel = eamDeviceModel;
-        }
-        deviceOnChanged(eamDeviceModel);
-        //endregion
-        break;
-      case 'L':
-        //region 产线、加工中心、班组
-        String lineCode = list[2];
-        var wcRes = await MoBeltLineRepository().getFormData('', '', {'LineCode': lineCode}, 0);
-        if (!wcRes.isSuccess){
-          TipsUtils.showTip(
-            msg: '获取生产产线数据时出错：${wcRes.message}！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (wcRes.data.id.isEmpty){
-          TipsUtils.showTip(
-            msg: '查询不到该生产产线！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (wcRes.data.lineClass != wcDataReportType){
-          TipsUtils.showTip(
-            msg: '产线类型错误！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (wcRes.data.id == submitModel.wcId){
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        switch (wcDataReportType){
-          //region
-          case 0: ///产线
-            MoBeltLineModel model = MoBeltLineModel.fromJson(wcRes.data.toJson());
-            await lineAdapter?.validViewValue([model]);
-            await lineOnChanged(model);
-            break;
-          case 1: ///加工中心
-            MoWorkCenterModel model = MoWorkCenterModel.fromJson(wcRes.data.toJson());
-            await workCenterAdapter?.validViewValue([model]);
-            await workCenterOnChanged(model);
-            break;
-          case 2: ///生产班组
-            MoBeltLineModel model = MoBeltLineModel.fromJson(wcRes.data.toJson());
-            await teamGroupAdapter?.validViewValue([model]);
-            await teamGroupOnChanged(model);
-            break;
-          //endregion
-        }
-        //endregion
-        break;
       case 'X':
         //region 生产序列号条码
-        if (submitType != AppConfig.serialNumberSubmit && submitType != AppConfig.singleBoxSerialNumberSubmit){
-          TipsUtils.showTip(
-            msg: '当前报工方式不需要选择生产序列号！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        //region 判断装箱情况
-        if (submitType == AppConfig.singleBoxSerialNumberSubmit){
-          String singleBoxQtyString = NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '';
-          int? singleBoxQty = int.tryParse(singleBoxQtyString);
-          String qtyString = NumPadUtil().getText(NumPadUtil.qty, numPadCTList) ?? '';
-          int? qty = int.tryParse(qtyString);
-          if (singleBoxQty == null || singleBoxQty < 1){
-            TipsUtils.showTip(
-              msg: '请输入单箱数量！',
-              toastType: ToastType.warn,
-            );
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-          if (singleBoxQty == qty){
-            TipsUtils.showTip(
-              msg: '当前装箱已满，请提交报工！',
-              toastType: ToastType.warn,
-            );
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-          if (qty != null && singleBoxQty < qty){
-            TipsUtils.showTip(
-              msg: '当前装箱已超，请检查！',
-              toastType: ToastType.warn,
-            );
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-        }
-        //endregion
+        // if (submitType != AppConfig.serialNumberSubmit && submitType != AppConfig.singleBoxSerialNumberSubmit){
+        //   TipsUtils.showTip(
+        //     msg: '当前报工方式不需要选择生产序列号！',
+        //     toastType: ToastType.warn,
+        //   );
+        //   isLoading = false;
+        //   ProgressDialogUtil.close();
+        //   return;
+        // }
+
         String string = list[2];
+
         void exit({int? errCode = 1, String? msg}) {
           if (errCode != null){
             serialNumberBarcodeMap.addAll({string: errCode});
           }
-          if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
-              && autoCommitSubmit){
-            setIsAutoCommitSuccess(false);
-          }
+          // if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
+          //     && autoCommitSubmit){
+          //   setIsAutoCommitSuccess(false);
+          // }
           if (msg != null && msg.isNotEmpty){
             TipsUtils.showTip(
               msg: msg,
@@ -1314,28 +917,29 @@ class MesTaskScanCodeController
           return;
         }
         MoOrderSNModel? orderSNModel;
-        if (!isBMoSN){
-          //region 报废序列号判断
-          var scrapCheckRes = await scrapCheck(string);
-          if (!scrapCheckRes){
-            return exit(errCode: 7);
-          }
-          //endregion
-          var snRes = await MoOrderSNRepository().getModel(string);
-          if (!snRes.isSuccess){
-            return exit(errCode: 2, msg: '获取序列号数据时出错：${snRes.message}！');
-          }
-          if (snRes.data.id.isEmpty){
-            return exit(errCode: 3, msg: '查询不到该序列号！');
-          }
-          if ((snRes.data.moOrderId ?? '').isEmpty){
-            return exit(errCode: 4, msg: '该序列号还未被分配任务单！');
-          }
-          if (snRes.data.enableMark != 1){
-            return exit(errCode: 7, msg: '该序列号已失效！');
-          }
-          orderSNModel = snRes.data;
-        }
+        // if (!isBMoSN){
+        //   //region 报废序列号判断
+        //   var scrapCheckRes = await scrapCheck(string);
+        //   if (!scrapCheckRes){
+        //     return exit(errCode: 7);
+        //   }
+        //   //endregion
+        //   var snRes = await MoOrderSNRepository().getModel(string);
+        //   if (!snRes.isSuccess){
+        //     return exit(errCode: 2, msg: '获取序列号数据时出错：${snRes.message}！');
+        //   }
+        //   if (snRes.data.id.isEmpty){
+        //     return exit(errCode: 3, msg: '查询不到该序列号！');
+        //   }
+        //   if ((snRes.data.moOrderId ?? '').isEmpty){
+        //     return exit(errCode: 4, msg: '该序列号还未被分配任务单！');
+        //   }
+        //   if (snRes.data.enableMark != 1){
+        //     return exit(errCode: 7, msg: '该序列号已失效！');
+        //   }
+        //   orderSNModel = snRes.data;
+        // }
+
         if (serialNumberCheckCodeList.isNotEmpty){ ///序列号校验码判断 todo 先暂时这样处理
           bool isEligibility(String cc){
             if (cc.startsWith('%') || cc.endsWith('%')){
@@ -1382,88 +986,44 @@ class MesTaskScanCodeController
         }
         //endregion
         ///任务单不一致，提示并退出
-        if (!isBMoSN && orderSNModel != null && orderSNModel.moOrderId != null
+        if (orderSNModel != null && orderSNModel.moOrderId != null
             && orderSNModel.moOrderId != submitModel.moOrderId){
           return exit(errCode: 8, msg: '该序列号已被分配到其他任务单');
         }
         ///按单箱序列号报工，暂时可以不用没有工序
         ///这里两种报工方式分开判断
-        if (submitType == AppConfig.serialNumberSubmit){
-          ///有选中的工序，且只选中一条
-          if ((submitModel.opId ?? '').isNotEmpty && submitModel.opId!.split(',').length == 1){
-            ///写入序列号前，需要先判断序列号的报工情况：
-            ///未通过，退出；
-            ///通过，（如果是自动报工，且按序列号报工，则需要先提交前检查）选中扫描的序列号，写入报工数量（如果是自动报工，则执行报工前检查并报工，最后退出）；
-            bool isCanContinue = await checkOpSerialNumber(string);
-            if (!isCanContinue){
-              ///[checkOpSerialNumber()] 中已写入 [serialNumberBarcodeMap]，也执行了 msg
-              return exit(errCode: null);
-            }
-            if (autoCommitSubmit){
-              Map<bool, String> checkMap = submitCheck(
-                isPrint: false,
-                invCCode: taskModel.invCCode,
-                needCheckQty: false,
-                needCheckOp: false,
-                needCheckSN: false,
-              );
-              if (checkMap.containsKey(false)){
-                return exit(msg: checkMap[false]!);
-              }
-            }
-            await orderSNAdapter?.validViewValue([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
-            orderSNOnChanged([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
-            if (autoCommitSubmit){
-              ///此时所有报工数据都已填写完成，符合自动报工的条件，直接提交报工记录
-              isLoading = false;
-              update();
-              ProgressDialogUtil.close();
-              serialNumberBarcodeMap.addAll({string: 200});
-              await saveSubmit(false, byAutoSubmit: true);
-              return;
-            }
-            serialNumberBarcodeMap.addAll({string: 200});
-          }
-          ///没有选中工序，或者选中多条
-          else {
-            ///清空选中的工序列表，并提示
-            submitModel.workBillEntryId = null;
-            submitModel.opId = null;
-            submitModel.opName = null;
-            submitModel.inspectFlag = null;
-            submitModel.pieceRate = null;
-            processAdapter?.clearSelection();
-            return exit(msg: '当前没有选中工序，或选中多条，请重新选择工序后再次扫描序列号条码！');
-          }
-        }
-        else if (submitType == AppConfig.singleBoxSerialNumberSubmit){
-          List<MoOrderSNModel> list = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
-          list.add(orderSNModel ?? MoOrderSNModel(id: string, code: string));
-          await orderSNAdapter?.validViewValue(list);
-          orderSNOnChanged(list);
-          if (singleBoxSerialNumberSubmitAutoCommit){
-            ///数量符合，可以执行自动提交
-            ///报工提交前检查，未通过则退出
-            Map<bool, String> checkMap = submitCheck(
-              isPrint: true,
-              invCCode: taskModel.invCCode,
-              needCheckQty: true,
-              needCheckOp: true,
-              needCheckSN: true,
-            );
-            if (checkMap.containsKey(false)){
-              return exit(msg: checkMap[false]!);
-            }
-            ///符合自动报工的条件，直接提交报工记录
-            isLoading = false;
-            update();
-            ProgressDialogUtil.close();
-            serialNumberBarcodeMap.addAll({string: 200});
-            await saveSubmit(true, byAutoSubmit: true);
-            return;
-          }
+
+          List<MoOrderSNModel> dataList = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
+          dataList.add(orderSNModel ?? MoOrderSNModel(id: string, code: string));
+          await orderSNAdapter?.validViewValue(dataList);
+          orderSNOnChanged(dataList);
+
+          // String serialNumber = dataList.map((e) => e.id).join(',');
+          // ShareStorageUtil.instance?.write(SharedPreferencesKeys.MES_TASK_SUBMIT_OP_SCAN_CODE_KEY, serialNumber);
+
+          // if (singleBoxSerialNumberSubmitAutoCommit){
+          //   ///数量符合，可以执行自动提交
+          //   ///报工提交前检查，未通过则退出
+          //   Map<bool, String> checkMap = submitCheck(
+          //     isPrint: true,
+          //     invCCode: taskModel.invCCode,
+          //     needCheckQty: true,
+          //     needCheckOp: true,
+          //     needCheckSN: true,
+          //   );
+          //   if (checkMap.containsKey(false)){
+          //     return exit(msg: checkMap[false]!);
+          //   }
+          //   ///符合自动报工的条件，直接提交报工记录
+          //   isLoading = false;
+          //   update();
+          //   ProgressDialogUtil.close();
+          //   serialNumberBarcodeMap.addAll({string: 200});
+          //   await saveSubmit(true, byAutoSubmit: true);
+          //   return;
+          // }
           serialNumberBarcodeMap.addAll({string: 200});
-        }
+
         //endregion
         break;
       default:

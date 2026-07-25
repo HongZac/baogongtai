@@ -19,42 +19,38 @@ import 'package:get/get.dart';
 ///报工扫码页面
 class MesTaskScanCodePage extends BaseFormPage<MesTaskScanCodeController>{
 
+
   @override
   Widget contentWidget(BuildContext context, MesTaskScanCodeController _) {
-    return Stack(
+    return Column(
       children: [
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: CardWidget(
-                content: taskWidget(context, _),
+        Container(
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                color: Theme.of(context).colorScheme.primary,
+                margin: const EdgeInsets.only(right: 6),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8, top: 0),
-                child: submitWidget(context, _),
+              Text(
+                '已扫描的条码',
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
-        ),
-
-        ///自动提交是否成功的闪烁反馈
-        if ((_.submitType == AppConfig.serialNumberSubmit || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
-            && _.autoCommitSubmit
-            && _.isAutoCommitSuccess != null)
-          Positioned.fill(
-            child: BlinkWidget(
-              isBlink: true,
-              rate: 700,
-              blinkColor: _.isAutoCommitSuccess! ? AppColors.runColor : null,
-              child: const SizedBox.shrink(),
-            ),
+            ],
           ),
+        ),
+        Expanded(
+          child: _.snViewWidget(context),
+        ),
       ],
     );
   }
+
 
   Widget taskWidget(BuildContext context, MesTaskScanCodeController _){
     return Container(
@@ -280,9 +276,9 @@ class MesTaskScanCodePage extends BaseFormPage<MesTaskScanCodeController>{
                   _.firstInspectionWidget(context),
 
                 ///序列号扫码历史提示信息
-                if (_.submitType == AppConfig.serialNumberSubmit
-                    || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
-                  _.serialNumberBarcodeMsgWidget(context),
+                // if (_.submitType == AppConfig.serialNumberSubmit
+                //     || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
+                //   _.serialNumberBarcodeMsgWidget(context),
               ],
             )
           ),

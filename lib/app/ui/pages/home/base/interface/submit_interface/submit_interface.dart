@@ -1288,7 +1288,7 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
     if (needCheckSN){
       if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
           && (submitModel.serialNumber ?? '').isEmpty){
-        return {false: '按序列号报工时，必须要选中一条序列号，请检查！'};
+        return {false: '按序列号报工时，必须需要序列号，请检查报工扫码中的序列号！'};
       }
       if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
           && serialNumberCheckCodeList.isNotEmpty){
@@ -1468,15 +1468,15 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
           return {false: '报工总数量输入有误，请重输！'};
         }
       }
-      if (needCheckSN){
-        ///当产品序列号字段有数据时，报工总数量必须要等于产品序列号个数
-        List<String> serialNumberList = (submitModel.serialNumber ?? '').isEmpty
-            ? []
-            : submitModel.serialNumber!.split(',').toList();
-        if (serialNumberList.isNotEmpty && serialNumberList.length != qty){
-          return {false: '序列号个数与报工总数量不符，请检查！'};
-        }
-      }
+      // if (needCheckSN){
+      //   ///当产品序列号字段有数据时，报工总数量必须要等于产品序列号个数
+      //   List<String> serialNumberList = (submitModel.serialNumber ?? '').isEmpty
+      //       ? []
+      //       : submitModel.serialNumber!.split(',').toList();
+      //   if (serialNumberList.isNotEmpty && serialNumberList.length != qty){
+      //     return {false: '序列号个数与报工总数量不符，请检查！'};
+      //   }
+      // }
     }
 
     if (submitType == AppConfig.singleBoxSerialNumberSubmit){
