@@ -38,6 +38,7 @@ import 'package:desktop/app/ui/pages/home/mes/submit_list/mes_submit_list_contro
 import 'package:desktop/app/ui/widget/num_pad/num_pad_controller.dart';
 import 'package:desktop/app/ui/widget/num_pad/num_pad_util.dart';
 import 'package:desktop/app/utils/app_config.dart';
+import 'package:desktop/app/utils/dialog_utils.dart';
 import 'package:desktop/app/utils/progress_dialog_util.dart';
 import 'package:desktop/app/utils/shared_preferences_keys.dart';
 import 'package:desktop/app/utils/tips_utils.dart';
@@ -51,7 +52,7 @@ import 'package:get/get.dart';
 class MesTaskSubmitController
     extends BaseFormController
     with InfoFormInterface,
-        // SerialPortGetXListenerMixin<MesTaskSubmitController>, ScanInterface<MesTaskSubmitController>,
+        SerialPortGetXListenerMixin<MesTaskSubmitController>, ScanInterface<MesTaskSubmitController>,
         AssignmentInterface,
         InvClassFrxNameInterface,
         SubmitPrintBarcodeInterface,
@@ -239,7 +240,7 @@ class MesTaskSubmitController
   Future<void> onReady() async{
     await super.onReady();
 
-    /*connectList.forEach((element) {
+    connectList.forEach((element) {
       element.weightMsgConnectService = WeightMsgConnect(connectModel: element, onFire: (data) { ///数据处理
         if (element.weightMsgConnectService == null){ return; }
         portMsgOnData(
@@ -251,7 +252,7 @@ class MesTaskSubmitController
         return null;
       });
       element.weightMsgConnectService!.onInit();
-    }); */
+    });
 
   }
 
@@ -812,7 +813,7 @@ class MesTaskSubmitController
 
   //region 串口、扫码
 
- /* @override
+ @override
   Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
     for (var element in weightMsgConnectService.connectList){
       if (element.com == serialPortDataModel.com){
@@ -856,7 +857,7 @@ class MesTaskSubmitController
         onBarcode(data);
         break;
     }
-  }*/
+  }
 
   ///扫描接收
   Future<void> onBarcode(String searchString) async{
@@ -878,7 +879,7 @@ class MesTaskSubmitController
     }
     ProgressDialogUtil.showProgressDialog(msg: '正在返回扫描结果');
 
-    /*searchString = getBarCodePrefix(searchString, objectItem.attributeList);*/
+    searchString = getBarCodePrefix(searchString, objectItem.attributeList);
 
     List<String> list = searchString.split('|');
     if (list.length < 3){
@@ -1267,7 +1268,7 @@ class MesTaskSubmitController
           return;
         }
         //region 判断装箱情况
-        if (submitType == AppConfig.singleBoxSerialNumberSubmit){
+        /* if (submitType == AppConfig.singleBoxSerialNumberSubmit){
           String singleBoxQtyString = NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '';
           int? singleBoxQty = int.tryParse(singleBoxQtyString);
           String qtyString = NumPadUtil().getText(NumPadUtil.qty, numPadCTList) ?? '';
@@ -1299,17 +1300,17 @@ class MesTaskSubmitController
             ProgressDialogUtil.close();
             return;
           }
-        }
+        }  */
         //endregion
         String string = list[2];
         void exit({int? errCode = 1, String? msg}) {
           if (errCode != null){
             serialNumberBarcodeMap.addAll({string: errCode});
           }
-          if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
-              && autoCommitSubmit){
-            setIsAutoCommitSuccess(false);
-          }
+          // if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
+          //     && autoCommitSubmit){
+          //   setIsAutoCommitSuccess(false);
+          // }
           if (msg != null && msg.isNotEmpty){
             TipsUtils.showTip(
               msg: msg,
@@ -1420,7 +1421,8 @@ class MesTaskSubmitController
               }
             }
             await orderSNAdapter?.validViewValue([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
-            orderSNOnChanged([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
+            submitSNOnChanged([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
+
             if (autoCommitSubmit){
               ///此时所有报工数据都已填写完成，符合自动报工的条件，直接提交报工记录
               isLoading = false;
@@ -1430,6 +1432,7 @@ class MesTaskSubmitController
               await saveSubmit(false, byAutoSubmit: true);
               return;
             }
+
             serialNumberBarcodeMap.addAll({string: 200});
           }
           ///没有选中工序，或者选中多条
@@ -1448,7 +1451,7 @@ class MesTaskSubmitController
           List<MoOrderSNModel> list = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
           list.add(orderSNModel ?? MoOrderSNModel(id: string, code: string));
           await orderSNAdapter?.validViewValue(list);
-          orderSNOnChanged(list);
+          submitSNOnChanged(list);
           if (singleBoxSerialNumberSubmitAutoCommit){
             ///数量符合，可以执行自动提交
             ///报工提交前检查，未通过则退出
@@ -1500,15 +1503,15 @@ class MesTaskSubmitController
     }
     isLoading = true;
 
-    late final MesTaskScanCodeController mesTaskScanCodeController;
+    // late final MesTaskScanCodeController mesTaskScanCodeController;
 
-    try{
-      mesTaskScanCodeController = Get.find<MesTaskScanCodeController>();
-    } catch (e){
-      ToastNotification(Get.overlayContext!).warn('请先报工扫码!');
-      isLoading = false;
-      return;
-    }
+    // try{
+    //   mesTaskScanCodeController = Get.find<MesTaskScanCodeController>();
+    // } catch (e){
+    //   ToastNotification(Get.overlayContext!).warn('请先报工扫码!');
+    //   isLoading = false;
+    //   return;
+    // }
 
 
     List<String> remainingCodeList = [];
@@ -1527,7 +1530,7 @@ class MesTaskSubmitController
       }
 
       String serialNumber = '';
-      String code = mesTaskScanCodeController.submitModel.serialNumber ?? '';
+      String code = snCodeStr;
       List<String> codeList = code.split(',');
 
       if(codeList.length >= singleBoxQty ) {
@@ -1617,11 +1620,6 @@ class MesTaskSubmitController
     var res = await MoOpSubmitRepository().submitFormData(submitModel, bMoSN: isBMoSN);
 
     if (!res.isSuccess){
-      if (byAutoSubmit){
-        ///自动报工，提交失败时，也要清空填写的序列号
-        await orderSNAdapter?.validViewValue([]);
-        orderSNOnChanged([]);
-      }
       TipsUtils.showTip(
         msg: '报工记录提交失败！${res.message}！',
         toastType: ToastType.error,
@@ -1635,8 +1633,8 @@ class MesTaskSubmitController
     for(var e in remainingCodeList){
       modelList.add(MoOrderSNModel(id: e, code: e));
     }
-    await mesTaskScanCodeController.orderSNAdapter?.validViewValue(modelList);
-    mesTaskScanCodeController.orderSNOnChanged(modelList);
+    await orderSNAdapter?.validViewValue(modelList);
+    submitSNOnChanged(modelList);
 
     List<String> submitResDataList = (res.data.data?.toString() ?? '').isEmpty
         ? []
@@ -1728,6 +1726,7 @@ class MesTaskSubmitController
       submitListController.update();
     }
     //endregion
+
     //region 报次品页面：当前派工单刷新
     MesTaskCheckRecordController? taskCheckRecordController;
     try {
@@ -1746,6 +1745,7 @@ class MesTaskSubmitController
       taskCheckRecordController.update();
     }
     //endregion
+
     //region 不良品上报页面：当前派工单刷新
     MesTaskMaterialRejectController? mesTaskMaterialRejectController;
     try {
@@ -1830,7 +1830,6 @@ class MesTaskSubmitController
           invMnemCode: inventoryModel.invMnemCode ?? '',
         );
         if (printRes.containsKey(true)) {
-          //ProgressDialogUtil.update(value: 3, msg: '${isNeedCreateStock ? '打印成功，正在生成生产入库单' : null}');
           ToastNotification(Get.overlayContext!).info(printRes[true]!);
         }
         else {
@@ -1838,8 +1837,7 @@ class MesTaskSubmitController
             msg: printRes[false] ?? '',
             toastType: ToastType.error,
           );
-          //ProgressDialogUtil.close();
-          //isLoading = false;
+
           return;
         }
       });
@@ -1995,7 +1993,22 @@ class MesTaskSubmitController
 
   Widget numPadAreaWidget(BuildContext context){
     if (submitType == AppConfig.singleBoxSerialNumberSubmit){
-      return SizedBox();
+      return GestureDetector(
+        onDoubleTap: () async {
+          await DialogUtils.showCustomDialog(
+              context,
+              isNeedConfirmBtn: false,
+              title: '条码列表',
+              onCancelName: '关闭',
+              contentPadding: const EdgeInsets.all(2),
+              initialWidth: 800,
+              initialHeight: 600,
+              content: snScanCodeViewWidget(context),
+          );
+
+        },
+        child: snViewWidget(context),
+      );
     }
     return super.numPadAreaWidget(context);
   }

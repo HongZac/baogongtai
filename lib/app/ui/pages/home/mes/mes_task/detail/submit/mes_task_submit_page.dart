@@ -282,6 +282,7 @@ class MesTaskSubmitPage extends BaseFormPage<MesTaskSubmitController>{
                 // if (_.submitType == AppConfig.serialNumberSubmit
                 //     || _.submitType == AppConfig.singleBoxSerialNumberSubmit)
                 //   _.serialNumberBarcodeMsgWidget(context),
+
               ],
             )
           ),

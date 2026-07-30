@@ -159,6 +159,9 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
   ///工艺工序选单
   ProcessAdapter? processAdapter;
 
+  ///SN码字符串
+  String snCodeStr = '';
+
   ///数据填报表单输入时启用时间防抖
   final Debounce numPadDebounce = Debounce(const Duration(milliseconds: 500));
   ///表单数据（数字型）填写项列表
@@ -950,6 +953,17 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
   }
   ///产品序列号选择变化
   void Function(List<PickerDataModel> list) get orderSNOnChanged => _orderSNOnChanged;
+
+
+  ///产品序列号选择变化
+  void _submitSNOnChanged(List<PickerDataModel> list) {
+    snCodeStr = list.map((e) => e.id).join(',');
+    // NumPadUtil().setText(NumPadUtil.qty, list.length.toString(), numPadCTList);
+    update();
+  }
+  ///产品序列号选择变化
+  void Function(List<PickerDataModel> list) get submitSNOnChanged => _submitSNOnChanged;
+
 
   //endregion
 
@@ -2835,13 +2849,67 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
                   List<MoOrderSNModel> list = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
                   list.removeWhere((element) => element.id == e.id);
                   await orderSNAdapter?.validViewValue(list);
-                  orderSNOnChanged(list);
+                  submitSNOnChanged(list);
                 },
                 deleteIcon: Icon(
                   FluentIcons.delete_16_regular,
                   size: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
                 ),
                 deleteButtonTooltipMessage: '移除',
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget snScanCodeViewWidget(BuildContext context){
+    List<MoOrderSNModel> list = orderSNAdapter == null
+        ? []
+        : orderSNAdapter!.dataList.where((element) => element.isSelected).toList();
+
+    return CardWidget(
+      margin: EdgeInsets.zero,
+      content: orderSNAdapter == null ?
+      SpinKitCircle(
+        color: Colors.grey,
+        size: 28,
+      ) :
+      SingleChildScrollView(
+        padding: const EdgeInsets.only(right: 42),
+        child: Container(
+          padding: const EdgeInsetsGeometry.all(6),
+          alignment: Alignment.topLeft,
+          child: Wrap(
+            runSpacing: 6, spacing: 6,
+            children: list.map((e){
+              return RawChip(
+                padding: const EdgeInsetsGeometry.only(
+                    left: 4, right: 10, top: 12, bottom: 12
+                ),
+                backgroundColor: Theme.of(context).colorScheme.surfaceTint.withAlpha(30),
+                side: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                    width: 1
+                ),
+                label: Text(
+                  e.id,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                // onDeleted: () async {
+                //   serialNumberBarcodeMap.remove(e.id);
+                //   List<MoOrderSNModel> list = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
+                //   list.removeWhere((element) => element.id == e.id);
+                //   await orderSNAdapter?.validViewValue(list);
+                //   orderSNOnChanged(list);
+                //   update();
+                // },
+                // deleteIcon: Icon(
+                //   FluentIcons.delete_16_regular,
+                //   size: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+                // ),
+                // deleteButtonTooltipMessage: '移除',
               );
             }).toList(),
           ),

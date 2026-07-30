@@ -123,19 +123,19 @@ class MesTaskDetailTabController extends BaseTabController{
           Get.delete<MesCheckRecordListController>(force: true);
         }
     ),
-    TabPageControllerModel( ///报工扫码页
-        put: (){
-          Get.put<MesTaskScanCodeController>(MesTaskScanCodeController(
-            taskModel: MoTaskModel.fromJson(taskModel.toJson()),
-            taskOpenType: taskOpenType,
-            showAppBar: false,
-            deviceId: taskOpenType == 1 ? key : '',
-          ));
-        },
-        delete: (){
-          Get.delete<MesTaskScanCodeController>(force: true);
-        }
-    ),
+    // TabPageControllerModel( ///报工扫码页
+    //     put: (){
+    //       Get.put<MesTaskScanCodeController>(MesTaskScanCodeController(
+    //         taskModel: MoTaskModel.fromJson(taskModel.toJson()),
+    //         taskOpenType: taskOpenType,
+    //         showAppBar: false,
+    //         deviceId: taskOpenType == 1 ? key : '',
+    //       ));
+    //     },
+    //     delete: (){
+    //       Get.delete<MesTaskScanCodeController>(force: true);
+    //     }
+    // ),
   ];
 
   @override
@@ -147,7 +147,7 @@ class MesTaskDetailTabController extends BaseTabController{
     '次品录入',
     '材料不良',
     '次品列表',
-    '报工扫码'
+    // '报工扫码'
   ];
 
   @override
@@ -159,7 +159,7 @@ class MesTaskDetailTabController extends BaseTabController{
     MesTaskCheckRecordPage(),
     MesTaskMaterialRejectPage(),
     MesCheckRecordListPage(),
-    MesTaskScanCodePage(),
+    // MesTaskScanCodePage(),
   ];
 
 

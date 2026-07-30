@@ -996,7 +996,7 @@ class MesTaskScanCodeController
           List<MoOrderSNModel> dataList = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
           dataList.add(orderSNModel ?? MoOrderSNModel(id: string, code: string));
           await orderSNAdapter?.validViewValue(dataList);
-          orderSNOnChanged(dataList);
+          submitSNOnChanged(dataList);
 
           // String serialNumber = dataList.map((e) => e.id).join(',');
           // ShareStorageUtil.instance?.write(SharedPreferencesKeys.MES_TASK_SUBMIT_OP_SCAN_CODE_KEY, serialNumber);
@@ -1042,7 +1042,6 @@ class MesTaskScanCodeController
   }
 
   //endregion
-
 
   @override
   Future<void> saveSubmit(bool isPrint, {bool byAutoSubmit = false}) async{
@@ -1124,7 +1123,7 @@ class MesTaskScanCodeController
       if (byAutoSubmit){
         ///自动报工，提交失败时，也要清空填写的序列号
         await orderSNAdapter?.validViewValue([]);
-        orderSNOnChanged([]);
+        submitSNOnChanged([]);
       }
       TipsUtils.showTip(
         msg: '报工记录提交失败！${res.message}！',

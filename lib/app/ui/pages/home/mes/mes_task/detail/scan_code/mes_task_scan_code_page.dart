@@ -45,7 +45,7 @@ class MesTaskScanCodePage extends BaseFormPage<MesTaskScanCodeController>{
           ),
         ),
         Expanded(
-          child: _.snViewWidget(context),
+          child: _.snScanCodeViewWidget(context,),
         ),
       ],
     );
