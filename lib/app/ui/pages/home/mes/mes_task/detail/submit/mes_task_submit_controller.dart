@@ -1765,7 +1765,7 @@ class MesTaskSubmitController
     }
     //endregion
     ///刷新报工填报区域的数据
-    await resetSubmitDataAfterSave();
+    // await resetSubmitDataAfterSave();
     ///历史皮重数据赋值
     if (isSaveTheLastPackingWeightData){
       await setTheLastPackingWeightData(
