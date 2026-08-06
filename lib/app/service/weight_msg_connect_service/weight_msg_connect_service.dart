@@ -59,7 +59,6 @@ class WeightMsgConnectService extends GetxService{
   }
 
   ///主机端口修改
-  @Deprecated('计划不再使用')
   Future<void> setting(String key) async {
     WeightMsgConnectModel _model = connectList.firstWhere(
             (element) => element.key == key, orElse: () => WeightMsgConnectModel(key: key, host: '', port: 0, accuracy: 0, com: ''));
@@ -82,7 +81,6 @@ class WeightMsgConnectService extends GetxService{
   }
 
   ///删除指定端口号
-  @Deprecated('计划不再使用')
   Future<void> delete(String key) async{
     var _dialogRes = await DialogUtils.showConfirmationDialog(
       Get.context!, msg: '确认删除？',

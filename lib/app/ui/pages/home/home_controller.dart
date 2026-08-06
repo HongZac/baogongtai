@@ -32,6 +32,7 @@ import 'package:desktop/app/ui/pages/home/websocket_setting/websocket_setting_vi
 import 'package:desktop/app/ui/pages/root/root_controller.dart';
 import 'package:desktop/app/ui/widget/fluent_ui/command_bars/command_bar.dart';
 import 'package:desktop/app/ui/widget/mine_icon_button.dart';
+import 'package:desktop/app/ui/widget/scan_gun/scan_gun_listener_widget.dart';
 import 'package:desktop/app/utils/app_config.dart';
 import 'package:desktop/app/utils/dialog_utils.dart';
 import 'package:desktop/app/utils/restsart_desktop_util.dart';
@@ -230,7 +231,6 @@ class HomeController extends GetxController {
       dateTime = dateTime.add(Duration(days: 1));
     }
     appRestartTimeDate = dateTime;
-
     update();
   }
 

@@ -50,12 +50,8 @@ on SubmitInterface, MesSubmitInterface {
 
   final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
   ///称重监听列表
-  @Deprecated('计划不再使用')
   late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
-          (element) => element.key == WeightMsgConnectService.dSPackingWeight
-          || element.key == WeightMsgConnectService.dSSingleBoxWeight
-          || element.key == WeightMsgConnectService.dSLastBoxWeight
-          || element.key == WeightMsgConnectService.dSWeight).toList();
+          (element) => true).toList();
 
   @override
   List<ChoiceChipModel> get operationWayList => List.unmodifiable(AppConfig.mesOrderSubmitOperationWayList);

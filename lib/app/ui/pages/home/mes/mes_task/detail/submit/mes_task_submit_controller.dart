@@ -31,7 +31,6 @@ import 'package:desktop/app/ui/pages/home/mes/mes_device_task/detail/device_deta
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/check_record/mes_task_check_record_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/detail_tab/mes_task_detail_tab_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/material_reject/mes_task_material_reject_controller.dart';
-import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/scan_code/mes_task_scan_code_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/mes_task_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_work_center/mes_work_center_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/submit_list/mes_submit_list_controller.dart';
@@ -1520,10 +1519,11 @@ class MesTaskSubmitController
       String singleBoxQtyString = NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '';
       int? singleBoxQty = int.tryParse(singleBoxQtyString);
       if (singleBoxQty == null || singleBoxQty < 1){
-        TipsUtils.showTip(
-          msg: '请输入单箱数量！',
-          toastType: ToastType.warn,
-        );
+        // TipsUtils.showTip(
+        //   msg: '请输入单箱数量！',
+        //   toastType: ToastType.warn,
+        // );
+        ToastNotification(Get.overlayContext!).error('请输入单箱数量！');
         isLoading = false;
         ProgressDialogUtil.close();
         return;
@@ -1593,6 +1593,7 @@ class MesTaskSubmitController
       isLoading = false;
       return;
     }
+
     String printerUrl = ''; ///打印机Url
     String printerName = ''; ///打印机Name
     int printCopies = 0; ///打印份数
@@ -1620,12 +1621,15 @@ class MesTaskSubmitController
     var res = await MoOpSubmitRepository().submitFormData(submitModel, bMoSN: isBMoSN);
 
     if (!res.isSuccess){
-      TipsUtils.showTip(
-        msg: '报工记录提交失败！${res.message}！',
-        toastType: ToastType.error,
-      );
+      ToastNotification(Get.overlayContext!).warn('报工记录提交失败！${res.message}！');
+      // TipsUtils.showTip(
+      //   msg: '报工记录提交失败！${res.message}！',
+      //   toastType: ToastType.error,
+      // );
       ProgressDialogUtil.close();
       isLoading = false;
+
+
       return;
     }
 
@@ -1656,6 +1660,7 @@ class MesTaskSubmitController
       ProgressDialogUtil.update(value: 1, msg: '报工记录提交成功，正在刷新数据！');
     }
     //endregion
+
     //region 刷新页面
     var taskRes = await MoTaskRepository().getFormData(submitModel.taskId!);
     if (!taskRes.isSuccess){
@@ -1765,7 +1770,11 @@ class MesTaskSubmitController
     }
     //endregion
     ///刷新报工填报区域的数据
-    // await resetSubmitDataAfterSave();
+    if(submitType == AppConfig.singleBoxSerialNumberSubmit){
+
+    }else {
+      await resetSubmitDataAfterSave();
+    }
     ///历史皮重数据赋值
     if (isSaveTheLastPackingWeightData){
       await setTheLastPackingWeightData(
@@ -1873,6 +1882,7 @@ class MesTaskSubmitController
       });
     }
     //endregion
+
     isLoading = false;
   }
 

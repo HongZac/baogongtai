@@ -45,7 +45,7 @@ class OverallSettingController extends GetxController with GetSingleTickerProvid
   final List<ChoiceChipModel> tabValueList = [
     ChoiceChipModel(icon: Icons.filter_alt_sharp, title: '默认选项卡', keyName: 'tab', isSelected: true),
     ChoiceChipModel(icon: Icons.print_rounded, title: '打印设置', keyName: 'print', isSelected: false),
-    ChoiceChipModel(icon: Icons.scale_rounded, title: '称重消息设置', keyName: 'weightMsg', isSelected: false),
+    ChoiceChipModel(icon: Icons.compare_arrows, title: 'TCP 连接设置', keyName: 'weightMsg', isSelected: false),
     ChoiceChipModel(icon: FluentIcons.speaker_settings_24_filled, title: '语音播报参数设置', keyName: 'tts', isSelected: false),
     ChoiceChipModel(icon: Icons.color_lens, title: '主题设置', keyName: 'theme', isSelected: false),
     ChoiceChipModel(icon: Icons.language, title: '语言设置', keyName: 'language', isSelected: false),

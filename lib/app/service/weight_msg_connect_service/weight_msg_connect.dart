@@ -12,7 +12,6 @@ import '../../utils/toast_notification.dart';
 typedef Future<VoidCallback?>? OnFire(dynamic response);
 
 
-@Deprecated('计划不再使用')
 class WeightMsgConnect extends GetxService{
 
   final WeightMsgConnectModel connectModel;

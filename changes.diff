@@ -1,0 +1,240 @@
+diff --git a/VERSION.md b/VERSION.md
+index 92ab01d98d91f8944c1084db6ed7878214a599d0..d029fd159b3b840b8d3ccd57697e15d2ba0a56a2 100644
+--- a/VERSION.md
++++ b/VERSION.md
+@@ -1,5 +1,8 @@
+ # Desktop：版本说明
+ 
++##2.7.0+273 2026.08.06 李
++1. 移除多个界面中已标记为废弃的称重监听列表过滤逻辑，更新设置界面中 TCP 连接设置的图标描述，优化各个页面的 tcp 服务的连接流程
++
+ ##2.7.0+272 2026.06.29 李
+ 1. 优化 WebSocket 重连逻辑避免程序卡死（移除WebSocket连接中的重复重连机制、更新网络检测地址）
+ 
+diff --git a/lib/app/service/weight_msg_connect_service/weight_msg_connect.dart b/lib/app/service/weight_msg_connect_service/weight_msg_connect.dart
+index 3f9f03b43b1dc44d83c869f16e4cec11aa54aa59..33251e6cd5134d710480aca717aadbb92e202aa9 100644
+--- a/lib/app/service/weight_msg_connect_service/weight_msg_connect.dart
++++ b/lib/app/service/weight_msg_connect_service/weight_msg_connect.dart
+@@ -12,7 +12,6 @@ import '../../utils/toast_notification.dart';
+ typedef Future<VoidCallback?>? OnFire(dynamic response);
+ 
+ 
+-@Deprecated('计划不再使用')
+ class WeightMsgConnect extends GetxService{
+ 
+   final WeightMsgConnectModel connectModel;
+diff --git a/lib/app/service/weight_msg_connect_service/weight_msg_connect_service.dart b/lib/app/service/weight_msg_connect_service/weight_msg_connect_service.dart
+index 117ee526bb21a2e94fc2f61f764d30f5603a6ca5..fd5131308f10760c97d90b76d86641eaf4abb3b1 100644
+--- a/lib/app/service/weight_msg_connect_service/weight_msg_connect_service.dart
++++ b/lib/app/service/weight_msg_connect_service/weight_msg_connect_service.dart
+@@ -59,7 +59,6 @@ class WeightMsgConnectService extends GetxService{
+   }
+ 
+   ///主机端口修改
+-  @Deprecated('计划不再使用')
+   Future<void> setting(String key) async {
+     WeightMsgConnectModel _model = connectList.firstWhere(
+             (element) => element.key == key, orElse: () => WeightMsgConnectModel(key: key, host: '', port: 0, accuracy: 0, com: ''));
+@@ -82,7 +81,6 @@ class WeightMsgConnectService extends GetxService{
+   }
+ 
+   ///删除指定端口号
+-  @Deprecated('计划不再使用')
+   Future<void> delete(String key) async{
+     var _dialogRes = await DialogUtils.showConfirmationDialog(
+       Get.context!, msg: '确认删除？',
+diff --git a/lib/app/service/weight_msg_connect_service/weight_msg_connect_setting/weight_msg_connect_setting_controller.dart b/lib/app/service/weight_msg_connect_service/weight_msg_connect_setting/weight_msg_connect_setting_controller.dart
+index 30ad24c8ef979a71658121f6dd51fe9295644cd8..295789d786a9268b06dc75dbc6a809a87bb75a29 100644
+--- a/lib/app/service/weight_msg_connect_service/weight_msg_connect_setting/weight_msg_connect_setting_controller.dart
++++ b/lib/app/service/weight_msg_connect_service/weight_msg_connect_setting/weight_msg_connect_setting_controller.dart
+@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
+ import 'package:get/get.dart';
+ 
+ ///称重消息端口号、接口号、误差值 修改页面
+-@Deprecated('计划不再使用')
+ class WeightMsgConnectSettingController extends BaseDialogController{
+ 
+   final WeightMsgConnectService weightMsgConnectService = Get.find<WeightMsgConnectService>();
+diff --git a/lib/app/service/weight_msg_connect_service/weight_msg_connect_setting/weight_msg_connect_setting_view.dart b/lib/app/service/weight_msg_connect_service/weight_msg_connect_setting/weight_msg_connect_setting_view.dart
+index 9f13380a6e8ef3f20ffcb7895d46cea6df9f6d24..cb4ab1e22e01d1a9f1649209a327ac84c36d4d0a 100644
+--- a/lib/app/service/weight_msg_connect_service/weight_msg_connect_setting/weight_msg_connect_setting_view.dart
++++ b/lib/app/service/weight_msg_connect_service/weight_msg_connect_setting/weight_msg_connect_setting_view.dart
+@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
+ import 'package:get/get.dart';
+ 
+ 
+-@Deprecated('计划不再使用')
+ class WeightMsgConnectSettingView extends BaseDialogPage<WeightMsgConnectSettingController>{
+ 
+   Widget contentWidget(BuildContext context, WeightMsgConnectSettingController _) {
+diff --git a/lib/app/ui/pages/home/base/interface/check_record_interface/p_mes_task_check_record_interface.dart b/lib/app/ui/pages/home/base/interface/check_record_interface/p_mes_task_check_record_interface.dart
+index f1b9e3d946647d61ef155bc7c3bd1155cfc5fdab..89fca925e28ca315e906b9e45ffb75d14219843b 100644
+--- a/lib/app/ui/pages/home/base/interface/check_record_interface/p_mes_task_check_record_interface.dart
++++ b/lib/app/ui/pages/home/base/interface/check_record_interface/p_mes_task_check_record_interface.dart
+@@ -23,10 +23,8 @@ mixin PMesTaskCheckRecordInterface on CheckRecordInterface {
+ 
+   final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
+   ///称重监听列表
+-  @Deprecated('计划不再使用')
+   late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
+-          (element) => /*element.key == WeightMsgConnectService.dSPackingWeight*/
+-          /*|| */element.key == WeightMsgConnectService.dSWeight).toList();
++          (element) => true).toList();
+ 
+ 
+ 
+diff --git a/lib/app/ui/pages/home/base/interface/inv_barcode_interface/inv_barcode_form_interface.dart b/lib/app/ui/pages/home/base/interface/inv_barcode_interface/inv_barcode_form_interface.dart
+index d63c0cbc355463f8925c8349e61173e078f264d6..89c301f05861cca881b51573eaed73be5de7c254 100644
+--- a/lib/app/ui/pages/home/base/interface/inv_barcode_interface/inv_barcode_form_interface.dart
++++ b/lib/app/ui/pages/home/base/interface/inv_barcode_interface/inv_barcode_form_interface.dart
+@@ -196,14 +196,8 @@ mixin InvBarcodeInterface on InvBarcodePrintInterface {
+ 
+   final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
+   ///称重监听列表
+-  @Deprecated('计划不再使用')
+   late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
+-          (element) => /*element.key == WeightMsgConnectService.dSEBWeight
+-          || element.key == WeightMsgConnectService.dSEBWeightForWeightSubmitType
+-          || element.key == WeightMsgConnectService.dSPackingWeight
+-          || */element.key == WeightMsgConnectService.dSSingleBoxWeight
+-          || element.key == WeightMsgConnectService.dSLastBoxWeight
+-          || element.key == WeightMsgConnectService.dSWeight).toList();
++          (element) => true).toList();
+ 
+ 
+ 
+diff --git a/lib/app/ui/pages/home/base/interface/submit_interface/mes_task_submit_interface.dart b/lib/app/ui/pages/home/base/interface/submit_interface/mes_task_submit_interface.dart
+index b276e738bbc7d789d63e3f0656f110693499c06a..bf6718d8bb12766c7aecc3e5ceef9115b6fce035 100644
+--- a/lib/app/ui/pages/home/base/interface/submit_interface/mes_task_submit_interface.dart
++++ b/lib/app/ui/pages/home/base/interface/submit_interface/mes_task_submit_interface.dart
+@@ -27,9 +27,8 @@ on SubmitInterface, MesSubmitInterface {
+ 
+   final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
+   ///称重监听列表
+-  @Deprecated('计划不再使用')
+   late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
+-          (element) => element.key == WeightMsgConnectService.dSWeight).toList();
++          (element) => true).toList();
+ 
+   @override
+   final Map<String, int?> formJudgeTypeMap = {
+diff --git a/lib/app/ui/pages/home/base/interface/submit_interface/order_submit_interface.dart b/lib/app/ui/pages/home/base/interface/submit_interface/order_submit_interface.dart
+index 35b9c151293bc9a6a044bfbb9d2655848bf76d59..5f80645403a7bcb57aab51108799846b3a16be48 100644
+--- a/lib/app/ui/pages/home/base/interface/submit_interface/order_submit_interface.dart
++++ b/lib/app/ui/pages/home/base/interface/submit_interface/order_submit_interface.dart
+@@ -50,12 +50,8 @@ on SubmitInterface, MesSubmitInterface {
+ 
+   final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
+   ///称重监听列表
+-  @Deprecated('计划不再使用')
+   late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
+-          (element) => element.key == WeightMsgConnectService.dSPackingWeight
+-          || element.key == WeightMsgConnectService.dSSingleBoxWeight
+-          || element.key == WeightMsgConnectService.dSLastBoxWeight
+-          || element.key == WeightMsgConnectService.dSWeight).toList();
++          (element) => true).toList();
+ 
+   @override
+   List<ChoiceChipModel> get operationWayList => List.unmodifiable(AppConfig.mesOrderSubmitOperationWayList);
+diff --git a/lib/app/ui/pages/home/base/interface/submit_interface/p_mes_task_submit_interface.dart b/lib/app/ui/pages/home/base/interface/submit_interface/p_mes_task_submit_interface.dart
+index b62426bea33fd927f81d461ac69734251cd32b97..218eee2d3a0f7c7359e0285d02c6bf9fea904c8c 100644
+--- a/lib/app/ui/pages/home/base/interface/submit_interface/p_mes_task_submit_interface.dart
++++ b/lib/app/ui/pages/home/base/interface/submit_interface/p_mes_task_submit_interface.dart
+@@ -32,14 +32,8 @@ mixin PMesTaskSubmitInterface on SubmitInterface {
+ 
+   final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
+   ///称重监听列表
+-  @Deprecated('计划不再使用')
+   late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
+-          (element) => element.key == WeightMsgConnectService.dSEBWeight
+-              || element.key == WeightMsgConnectService.dSEBWeightForWeightSubmitType
+-              || element.key == WeightMsgConnectService.dSPackingWeight
+-              || element.key == WeightMsgConnectService.dSSingleBoxWeight
+-              || element.key == WeightMsgConnectService.dSLastBoxWeight
+-              || element.key == WeightMsgConnectService.dSWeight).toList();
++          (element) => true).toList();
+ 
+   ///显示“获取实际单重”按钮
+   bool isShowGetPieceWeightBtn = AppConfig.isShowGetPieceWeightBtn;
+diff --git a/lib/app/ui/pages/home/home_view.dart b/lib/app/ui/pages/home/home_view.dart
+index 1df680ab54455f4f3a0cb4d127ecfee612c87791..95a964881b33ebb5bf7fe064b87fc1c530c6b455 100644
+--- a/lib/app/ui/pages/home/home_view.dart
++++ b/lib/app/ui/pages/home/home_view.dart
+@@ -1,5 +1,4 @@
+ import 'package:basement/service.dart';
+-import 'package:basement/utils.dart';
+ import 'package:connectivity_plus/connectivity_plus.dart';
+ import 'package:desktop/app/model/choice_chip_model.dart';
+ import 'package:desktop/app/theme/app_colors.dart';
+@@ -16,7 +15,6 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
+ import 'package:flutter/foundation.dart';
+ import 'package:flutter/material.dart';
+ import 'package:flutter/services.dart';
+-import 'package:flutter/widgets.dart';
+ import 'package:get/get.dart';
+ import 'package:window_manager/window_manager.dart';
+ import 'home_controller.dart';
+diff --git a/lib/app/ui/pages/home/setting/overall_setting_controller.dart b/lib/app/ui/pages/home/setting/overall_setting_controller.dart
+index f5ac8b07eba6063f532b6c2874cdc5f7cfcb5638..32dc365d321231eb8ac8f09857a1f7f3db0f7782 100644
+--- a/lib/app/ui/pages/home/setting/overall_setting_controller.dart
++++ b/lib/app/ui/pages/home/setting/overall_setting_controller.dart
+@@ -45,7 +45,7 @@ class OverallSettingController extends GetxController with GetSingleTickerProvid
+   final List<ChoiceChipModel> tabValueList = [
+     ChoiceChipModel(icon: Icons.filter_alt_sharp, title: '默认选项卡', keyName: 'tab', isSelected: true),
+     ChoiceChipModel(icon: Icons.print_rounded, title: '打印设置', keyName: 'print', isSelected: false),
+-    ChoiceChipModel(icon: Icons.scale_rounded, title: '称重消息设置', keyName: 'weightMsg', isSelected: false),
++    ChoiceChipModel(icon: Icons.compare_arrows, title: 'TCP 连接设置', keyName: 'weightMsg', isSelected: false),
+     ChoiceChipModel(icon: FluentIcons.speaker_settings_24_filled, title: '语音播报参数设置', keyName: 'tts', isSelected: false),
+     ChoiceChipModel(icon: Icons.color_lens, title: '主题设置', keyName: 'theme', isSelected: false),
+     ChoiceChipModel(icon: Icons.language, title: '语言设置', keyName: 'language', isSelected: false),
+diff --git a/lib/app/ui/pages/home/setting/overall_setting_page.dart b/lib/app/ui/pages/home/setting/overall_setting_page.dart
+index 5af97e6819e9d9f53fb6ab133e27856479d5cc36..e61719348bbaa458959b20292ffc2bd1ec7a921b 100644
+--- a/lib/app/ui/pages/home/setting/overall_setting_page.dart
++++ b/lib/app/ui/pages/home/setting/overall_setting_page.dart
+@@ -453,7 +453,7 @@ class OverallSettingPage extends GetView<OverallSettingController> {
+   Widget ttsTouchSpin(BuildContext context, OverallSettingController _,
+       double value, double? min, double? max, double? step, int point, ValueChanged<double> onChanged){
+     return TouchSpin(
+-      width: 140,
++      width: 60,
+       numValue: value,
+       numMin: min,
+       numMax: max,
+diff --git a/lib/app/ui/widget/touch_spin.dart b/lib/app/ui/widget/touch_spin.dart
+index 07f99397c5e288dac607487f5adabdaa13628860..7d0efc7cd8063b8f8dcc5d7797d0387ce7dbf6b1 100644
+--- a/lib/app/ui/widget/touch_spin.dart
++++ b/lib/app/ui/widget/touch_spin.dart
+@@ -246,6 +246,7 @@ class _TouchSpinState extends State<TouchSpin> {
+     }
+     else {
+       contentWidget = Row(
++        mainAxisSize: MainAxisSize.min,
+         crossAxisAlignment: CrossAxisAlignment.center,
+         children: <Widget>[
+           subtractIconBtnWidget,
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 8237a1213213f4e9399c62244cac81db09441941..07a7a9acfe8e36b90348e33c46ae333c6bfeb469 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -7,7 +7,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+ 
+ # 1.1 flutter 2.8.1 =>2.10.1
+ #同时在 windows/runner/Runner.rc 中修改版本号
+-version: 2.7.0+272
++version: 2.7.0+273
+ environment:
+   sdk: ">=2.19.0 <3.0.0"
+ 
+diff --git a/windows/runner/Runner.rc b/windows/runner/Runner.rc
+index ec617f2516ed2a6921440ccec5979dc6ab63da82..92ebdc55c902e23b7483f6348e91da18dde00495 100644
+--- a/windows/runner/Runner.rc
++++ b/windows/runner/Runner.rc
+@@ -69,7 +69,7 @@ IDI_APP_ICON            ICON                    "resources\\logo48.ico"
+ #if defined(FLUTTER_VERSION)
+ #define VERSION_AS_STRING FLUTTER_VERSION
+ #else
+-#define VERSION_AS_STRING "2.7.0+272"
++#define VERSION_AS_STRING "2.7.0+273"
+ #endif
+ 
+ VS_VERSION_INFO VERSIONINFO

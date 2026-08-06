@@ -32,14 +32,8 @@ mixin PMesTaskSubmitInterface on SubmitInterface {
 
   final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
   ///称重监听列表
-  @Deprecated('计划不再使用')
   late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
-          (element) => element.key == WeightMsgConnectService.dSEBWeight
-              || element.key == WeightMsgConnectService.dSEBWeightForWeightSubmitType
-              || element.key == WeightMsgConnectService.dSPackingWeight
-              || element.key == WeightMsgConnectService.dSSingleBoxWeight
-              || element.key == WeightMsgConnectService.dSLastBoxWeight
-              || element.key == WeightMsgConnectService.dSWeight).toList();
+          (element) => true).toList();
 
   ///显示“获取实际单重”按钮
   bool isShowGetPieceWeightBtn = AppConfig.isShowGetPieceWeightBtn;

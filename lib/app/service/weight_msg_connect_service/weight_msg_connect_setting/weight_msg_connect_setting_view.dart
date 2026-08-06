@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 
-@Deprecated('计划不再使用')
 class WeightMsgConnectSettingView extends BaseDialogPage<WeightMsgConnectSettingController>{
 
   Widget contentWidget(BuildContext context, WeightMsgConnectSettingController _) {

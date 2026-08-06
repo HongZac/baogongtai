@@ -453,7 +453,7 @@ class OverallSettingPage extends GetView<OverallSettingController> {
   Widget ttsTouchSpin(BuildContext context, OverallSettingController _,
       double value, double? min, double? max, double? step, int point, ValueChanged<double> onChanged){
     return TouchSpin(
-      width: 140,
+      width: 60,
       numValue: value,
       numMin: min,
       numMax: max,

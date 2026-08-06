@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 ///称重消息端口号、接口号、误差值 修改页面
-@Deprecated('计划不再使用')
 class WeightMsgConnectSettingController extends BaseDialogController{
 
   final WeightMsgConnectService weightMsgConnectService = Get.find<WeightMsgConnectService>();

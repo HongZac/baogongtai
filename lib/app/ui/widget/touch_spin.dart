@@ -246,6 +246,7 @@ class _TouchSpinState extends State<TouchSpin> {
     }
     else {
       contentWidget = Row(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           subtractIconBtnWidget,

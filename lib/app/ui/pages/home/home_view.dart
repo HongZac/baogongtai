@@ -1,5 +1,4 @@
 import 'package:basement/service.dart';
-import 'package:basement/utils.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/theme/app_colors.dart';
@@ -16,7 +15,6 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 import 'home_controller.dart';

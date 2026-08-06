@@ -69,7 +69,7 @@ IDI_APP_ICON            ICON                    "resources\\logo48.ico"
 #if defined(FLUTTER_VERSION)
 #define VERSION_AS_STRING FLUTTER_VERSION
 #else
-#define VERSION_AS_STRING "2.7.0+272"
+#define VERSION_AS_STRING "2.7.0+273"
 #endif
 
 VS_VERSION_INFO VERSIONINFO

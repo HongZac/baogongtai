@@ -37,6 +37,7 @@ class ScanGunListenerWidget extends StatefulWidget {
 
 
   ScanGunListenerWidget({
+    super.key,
     this.child,
     this.bufferDuration = _hundredMs,
     this.tag = '',
@@ -50,6 +51,7 @@ class ScanGunListenerWidget extends StatefulWidget {
     this.useKeyDownEvent = true,
     this.suffixType = SuffixType.enter,
   });
+
 
   @override
   ScanGunListenerState createState() => ScanGunListenerState();
@@ -75,6 +77,7 @@ class ScanGunListenerState extends State<ScanGunListenerWidget>{
   late final String _suffix;
 
 
+
   @override
   void initState() {
     super.initState();
@@ -93,6 +96,7 @@ class ScanGunListenerState extends State<ScanGunListenerWidget>{
     HardwareKeyboard.instance.addHandler(_keyBoardCallback);
     _keyboardSubscription = _controller.stream.listen(onKeyEvent);
   }
+
 
   bool _keyBoardCallback(KeyEvent keyEvent) {
     try {
