@@ -5,6 +5,7 @@ import 'package:basement/utils.dart';
 import 'package:desktop/app/routes/app_pages.dart';
 import 'package:desktop/app/routes/app_routes.dart';
 import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_page.dart';
 import 'package:desktop/app/ui/pages/home/base/base_tab/base_tab_page.dart';
@@ -115,6 +116,11 @@ class MineGetDelegate extends GetDelegate {
               (pageWidget.controller as SerialPortGetXListenerMixin).enableSerialPort = true;
             }
 
+            if (pageWidget.controller is TcpSocketGetxListenerMixin){
+              writeLog('${pageWidget} enableTcpSocket true');
+              (pageWidget.controller as TcpSocketGetxListenerMixin).enableTcpSocket = true;
+            }
+
           } catch (e){}
         }
       }
@@ -167,6 +173,10 @@ class MineGetDelegate extends GetDelegate {
             writeLog('${pageWidget} enableSerialPort false beforePush');
             (pageWidget.controller as SerialPortGetXListenerMixin).enableSerialPort = false;
           }
+          if (pageWidget.controller is TcpSocketGetxListenerMixin){
+            writeLog('${pageWidget} enableTcpSocket false beforePush');
+            (pageWidget.controller as TcpSocketGetxListenerMixin).enableTcpSocket = false;
+          }
         } catch(e){}
       }
     }
@@ -207,6 +217,11 @@ class MineGetDelegate extends GetDelegate {
         if (controller is SerialPortGetXListenerMixin){
           writeLog('${controller} enableSerialPort true');
           controller.enableSerialPort = true;
+        }
+
+        if (controller is TcpSocketGetxListenerMixin){
+          writeLog('${controller} enableTcpSocket true');
+          controller.enableTcpSocket = true;
         }
 
         return false;

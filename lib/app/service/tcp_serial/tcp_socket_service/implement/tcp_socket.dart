@@ -35,9 +35,16 @@ class TcpSocket extends TcpSocketInterface {
       sock = await Socket.connect(host, port);
     } catch (e){
       isOpen = false;
+      errMsg = 'TCP $host:$port 连接时出错：${e.toString()}';
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-        ToastNotification(Get.overlayContext!).error('TCP 连接时出错：${e.toString()}');
+        ToastNotification(Get.overlayContext!).error(errMsg);
       });
+      eventBus.fire(TcpSocketDataModel(
+        host: host,
+        port: port,
+        data: jsonEncode({'-1': errMsg}),
+        isConnectMsg: true,
+      ));
       return false;
     }
 
@@ -71,7 +78,10 @@ class TcpSocket extends TcpSocketInterface {
       }
     }, onError: (error) async {
       isOpen = false;
-      errMsg = 'TCP 连接出错：${error.toString()}，请检查！';
+      errMsg = 'TCP $host:$port 连接出错：${error.toString()}，请检查！';
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+        ToastNotification(Get.overlayContext!).error(errMsg);
+      });
       eventBus.fire(TcpSocketDataModel(
         host: host,
         port: port,
@@ -80,7 +90,10 @@ class TcpSocket extends TcpSocketInterface {
       ));
     }, onDone: () async {
       isOpen = false;
-      errMsg = 'TCP 连接关闭！';
+      errMsg = 'TCP $host:$port 连接关闭！';
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+        ToastNotification(Get.overlayContext!).error(errMsg);
+      });
       eventBus.fire(TcpSocketDataModel(
         host: host,
         port: port,
