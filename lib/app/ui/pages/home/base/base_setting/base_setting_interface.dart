@@ -4,7 +4,7 @@ import 'package:desktop/app/ui/pages/home/base/base_setting/base_setting_control
 
 
 ///设置页面 基础页
-abstract class BaseSettingInterface<T extends BaseSettingController> implements BaseFormInterface {
+mixin BaseSettingInterface<T extends BaseSettingController> implements BaseFormInterface {
 
   ///标题名称
   final String title = '';

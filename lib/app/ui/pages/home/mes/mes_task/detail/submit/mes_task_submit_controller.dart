@@ -11,10 +11,11 @@ import 'package:desktop/app/model/assignment_form_model.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/model/info_form_model.dart';
 import 'package:desktop/app/routes/app_routes.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
-import 'package:desktop/app/service/serial_com_service/serial_port_data_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/model/tcp_socket_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/utils/tcp_serial_data_utils.dart';
 import 'package:desktop/app/theme/app_colors.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/assignment_interface/assignment_interface.dart';
@@ -22,6 +23,7 @@ import 'package:desktop/app/ui/pages/home/base/interface/barcode_interface.dart'
 import 'package:desktop/app/ui/pages/home/base/interface/info_form_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/interface_util.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/inv_class_frx_name_interface/inv_class_frx_name_interface.dart';
+import 'package:desktop/app/ui/pages/home/base/interface/serial_number_scan_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/mes_submit_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/mes_task_submit_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/submit_interface.dart';
@@ -52,10 +54,12 @@ class MesTaskSubmitController
     extends BaseFormController
     with InfoFormInterface,
         SerialPortGetXListenerMixin<MesTaskSubmitController>, ScanInterface<MesTaskSubmitController>,
+        TcpSocketGetxListenerMixin<MesTaskSubmitController>,
         AssignmentInterface,
         InvClassFrxNameInterface,
         SubmitPrintBarcodeInterface,
         SubmitInterface, MesSubmitInterface, MesTaskSubmitInterface,
+        SerialNumberScanInterface<MesTaskSubmitController>,
         InterfaceUtil {
 
   late final MesTaskDetailTabController mesTaskDetailTabController;
@@ -810,14 +814,14 @@ class MesTaskSubmitController
   //endregion
 
 
-  //region 串口、扫码
+  //region 串口、扫码、TCP
 
  @override
   Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
-    for (var element in weightMsgConnectService.connectList){
+    for (var element in serialComService.serialPortMsgProcessList){
       if (element.com == serialPortDataModel.com){
         portMsgOnData(
-          element.key,
+          element.keyName,
           data: serialPortDataModel.data,
           accuracy: element.accuracy,
         );
@@ -831,16 +835,15 @@ class MesTaskSubmitController
     double accuracy = 0,
   }){
     switch (key) {
-      case WeightMsgConnectService.dSWeight:
+      case AppConfig.dSWeight:
       //region 报工总重
         if (submitType != AppConfig.qtySubmit && submitType != AppConfig.singleBoxSerialNumberSubmit) { return; }
-        String formatValue = weightMsgConnectService.getFormatValue(
+        String formatValue = TcpSerialDataUtils.getFormatValue(
           data,
-          isWeightMsgReverseOrder: isWeightMsgReverseOrder,
         );
         //region 判断差值
         String _oldString = NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '';
-        bool isLessThen = weightMsgConnectService.isWithinAcceptableErrorRange(
+        bool isLessThen = TcpSerialDataUtils.isWithinAcceptableErrorRange(
             oldValue: double.tryParse(_oldString),
             value: double.tryParse(formatValue) ?? 0,
             errorRange: accuracy
@@ -851,9 +854,15 @@ class MesTaskSubmitController
         calcQty(NumPadUtil.weight);
         //endregion
         break;
-      case WeightMsgConnectService.scanGun:
-      case WeightMsgConnectService.cardReader:
+      case AppConfig.scanGun:
+      case AppConfig.cardReader:
         onBarcode(data);
+        break;
+      case AppConfig.serialNumberScan:
+        serialNumberScanOnBarcode(
+          searchString: data,
+          invCCode: taskModel.invCCode,
+        );
         break;
     }
   }
@@ -1489,6 +1498,19 @@ class MesTaskSubmitController
     isLoading = false;
     update();
     ProgressDialogUtil.update(value: 1);
+  }
+
+  @override
+  Future<void> onTcpSocketData(TcpSocketDataModel tcpSocketDataModel) async {
+    for (var element in tcpSocketService.tcpSocketMsgProcessList){
+      if (element.host == tcpSocketDataModel.host && element.port == tcpSocketDataModel.port){
+        portMsgOnData(
+          element.keyName,
+          data: tcpSocketDataModel.data,
+          accuracy: element.accuracy,
+        );
+      }
+    }
   }
 
   //endregion
@@ -2128,12 +2150,6 @@ class MesTaskSubmitController
 
   @override
   void onClose() {
-    connectList.forEach((element){
-      if (element.weightMsgConnectService != null){
-        element.weightMsgConnectService!.onClose();
-        element.weightMsgConnectService = null;
-      }
-    });
     numPadDebounce.dispose();
     numPadCTList.forEach((element) {
       element.dispose();

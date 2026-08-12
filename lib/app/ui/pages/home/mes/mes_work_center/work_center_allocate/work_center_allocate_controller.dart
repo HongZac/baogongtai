@@ -9,11 +9,13 @@ import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/model/dialog_return_data_model.dart';
 import 'package:desktop/app/pickers/adapter_helper.dart';
 import 'package:desktop/app/pickers/picker_view/picker.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
-import 'package:desktop/app/service/serial_com_service/serial_port_data_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/model/tcp_socket_data_model.dart';
 import 'package:desktop/app/ui/widget/dialog/interface/base_dialog_controller.dart';
 import 'package:desktop/app/ui/widget/dialog/interface/dialog_controller_interface.dart';
+import 'package:desktop/app/utils/app_config.dart';
 import 'package:desktop/app/utils/progress_dialog_util.dart';
 import 'package:desktop/app/utils/toast_notification.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +25,8 @@ import 'package:get/get.dart';
 ///产线、加工中心、班组 分配页面
 class WorkCenterAllocateController
     extends BaseDialogController
-    with SerialPortGetXListenerMixin<WorkCenterAllocateController>{
+    with SerialPortGetXListenerMixin<WorkCenterAllocateController>,
+        TcpSocketGetxListenerMixin<WorkCenterAllocateController> {
 
   ///要修改分配信息的产线、加工中心、班组 ID
   final String workCenterId;
@@ -254,14 +257,14 @@ class WorkCenterAllocateController
   }
 
 
-  //region 串口、扫码
+  //region 串口、扫码、TCP
 
   @override
   Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
-    for (var element in weightMsgConnectService.connectList){
+    for (var element in serialComService.serialPortMsgProcessList){
       if (element.com == serialPortDataModel.com){
         portMsgOnData(
-          element.key,
+          element.keyName,
           data: serialPortDataModel.data,
           accuracy: element.accuracy,
         );
@@ -275,8 +278,8 @@ class WorkCenterAllocateController
     double accuracy = 0,
   }){
     switch (key){
-      case WeightMsgConnectService.scanGun:
-      case WeightMsgConnectService.cardReader:
+      case AppConfig.scanGun:
+      case AppConfig.cardReader:
         onBarcode(data);
         break;
     }
@@ -477,6 +480,19 @@ class WorkCenterAllocateController
     }
     else {
       ProgressDialogUtil.update(value: 1);
+    }
+  }
+
+  @override
+  Future<void> onTcpSocketData(TcpSocketDataModel tcpSocketDataModel) async {
+    for (var element in tcpSocketService.tcpSocketMsgProcessList){
+      if (element.host == tcpSocketDataModel.host && element.port == tcpSocketDataModel.port){
+        portMsgOnData(
+          element.keyName,
+          data: tcpSocketDataModel.data,
+          accuracy: element.accuracy,
+        );
+      }
     }
   }
 

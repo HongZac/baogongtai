@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 
 ///Tab页面 基础页
-abstract class BaseTabController extends BaseFormController with BaseTabInterface {
+abstract class BaseTabController
+    extends BaseFormController
+    with BaseTabInterface {
 
   ///是否显示“回退按钮”
   final bool isShowBackOutlinedButton;

@@ -16,8 +16,10 @@ import 'package:desktop/app/service/app_service.dart';
 import 'package:desktop/app/service/auto_reconnect_websocket.dart';
 import 'package:desktop/app/service/data_service.dart';
 import 'package:desktop/app/service/network_connection_service.dart';
-import 'package:desktop/app/service/serial_com_service/setting/serial_com_setting_controller.dart';
-import 'package:desktop/app/service/serial_com_service/setting/serial_com_setting_view.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/setting/serial_com_setting_controller.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/setting/serial_com_setting_view.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/setting/tcp_socket_setting_controller.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/setting/tcp_socket_setting_view.dart';
 import 'package:desktop/app/ui/pages/home/about_us/about_controller.dart';
 import 'package:desktop/app/ui/pages/home/about_us/about_page.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_device_order/detail/device_detail/mes_device_order_detail_controller.dart';
@@ -152,14 +154,35 @@ class HomeController extends GetxController {
         iconSize: iconSize,
         onPressed: () async{ await restartAppSetting(); },
       ),*/
-    CommandBarButton(
-      label: '退出系统',
+    CommandBarDropdown(
+      label: '电源',
       icon: Icons.power_settings_new,
       fontColor: fontColor,
       fontSize: fontSize,
       iconColor: iconColor,
       iconSize: iconSize,
-      onPressed: () async{ await rootCtl.exitApp(); },
+      isShowTrailing: false,
+      position: FlyoutPosition.side,
+      verticalOffset: -20,
+      horizontalOffset: 50,
+      items: [
+        MenuFlyoutItem(
+          label: '切换账号',
+          fontColor: fontColor,
+          fontSize: fontSize,
+          iconColor: iconColor,
+          iconSize: iconSize,
+          onPressed: () async { await loginOut(); }
+        ),
+        MenuFlyoutItem(
+          label: '关闭系统',
+          fontColor: fontColor,
+          fontSize: fontSize,
+          iconColor: iconColor,
+          iconSize: iconSize,
+          onPressed: () async { await rootCtl.exitApp(); }
+        ),
+      ],
     ),
   ];
 
@@ -636,6 +659,20 @@ class HomeController extends GetxController {
       contentPadding: const EdgeInsets.all(12),
       content: SerialComSettingView(),
       controller: SerialComSettingController(),
+    );
+  }
+
+  ///TCP 设置
+  Future<void> tcpSocketService() async {
+    await DialogUtils.showCustomDialog<TcpSocketSettingController, bool>(
+      Get.context!,
+      isMaximize: true,
+      title: 'TCP 设置',
+      onCancelName: '关闭',
+      isNeedConfirmBtn: false,
+      contentPadding: const EdgeInsets.all(12),
+      content: TcpSocketSettingView(),
+      controller: TcpSocketSettingController(),
     );
   }
 

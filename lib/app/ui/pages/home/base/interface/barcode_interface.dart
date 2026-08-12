@@ -1,5 +1,5 @@
 import 'package:basement/model.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

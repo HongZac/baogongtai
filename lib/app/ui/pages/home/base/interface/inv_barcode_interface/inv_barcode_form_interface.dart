@@ -9,8 +9,6 @@ import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/pickers/adapter_helper.dart';
 import 'package:desktop/app/pickers/picker_view/picker.dart';
 import 'package:desktop/app/service/data_service.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
 import 'package:desktop/app/theme/app_colors.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/inv_barcode_interface/inv_barcode_print_interface.dart';
 import 'package:desktop/app/ui/widget/num_pad/num_pad_controller.dart';
@@ -193,12 +191,6 @@ mixin InvBarcodeInterface on InvBarcodePrintInterface {
   bool get isHaveSingleBoxQtyReport => saveType == AppConfig.qtyBoxSubmit
       || saveType == AppConfig.palletSubmit
       || saveType == AppConfig.weightBoxSubmit;
-
-  final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
-  ///称重监听列表
-  late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
-          (element) => true).toList();
-
 
 
   //region Adapter

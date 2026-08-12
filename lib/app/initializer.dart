@@ -1,8 +1,8 @@
 import 'package:basement/base_initializer.dart';
 import 'package:desktop/app/service/app_print_service/app_print_service.dart';
 import 'package:desktop/app/service/sound_service.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/tcp_socket_service.dart';
 import 'package:desktop/app/service/tts_service.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
 import 'package:desktop/app/theme/app_theme.dart';
 import 'package:desktop/app/theme/app_theme_mode.dart';
 import 'package:desktop/app/theme/font_family_config.dart';
@@ -18,7 +18,7 @@ import 'package:get/get.dart';
 import 'package:desktop/app/service/app_service.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'service/serial_com_service/serial_com_service.dart';
+import 'service/tcp_serial/serial_com_service/serial_com_service.dart';
 
 
 ///在初始化APP系统前，先将GetService处理
@@ -76,10 +76,11 @@ class Initializer implements Bindings {
       Get.put(AppService());
       Get.put(SoundService());
       Get.put(TtsService());
-      Get.put(WeightMsgConnectService());
       Get.put(AppPrintService());
       ///串口通讯服务管理
       Get.put(SerialComService());
+      ///TCP 套接字通讯服务管理
+      Get.put(TcpSocketService());
 
       ///安卓平台的的状态栏隐藏
       if (GetPlatform.isAndroid){

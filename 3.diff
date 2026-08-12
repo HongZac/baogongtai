@@ -1,0 +1,26 @@
+diff --git a/lib/app/ui/pages/home/base/interface/serial_number_scan_interface.dart b/lib/app/ui/pages/home/base/interface/serial_number_scan_interface.dart
+index 86134b4fa36f49bffa0a87f40de735367b1398be..e8f2ea7c9be34ec74403364b4ea2b23646e59948 100644
+--- a/lib/app/ui/pages/home/base/interface/serial_number_scan_interface.dart
++++ b/lib/app/ui/pages/home/base/interface/serial_number_scan_interface.dart
+@@ -29,7 +29,7 @@ on BaseFormController,
+   }) async {
+     await Future.doWhile(() async {
+       if (_isLoading || isLoading){ ///isLoading 等待报工结束
+-        await Future.delayed(const Duration(milliseconds: 100));
++        await Future.delayed(const Duration(milliseconds: 1000));
+         return true;
+       }
+       return false;
+diff --git a/lib/app/utils/app_config.dart b/lib/app/utils/app_config.dart
+index 3e3efbe4fa95caad4afc94f32c2d59024ac9c044..7d57f43e9ffae9aa5a030eacbddf0a7f66a59f52 100644
+--- a/lib/app/utils/app_config.dart
++++ b/lib/app/utils/app_config.dart
+@@ -2533,7 +2533,7 @@ abstract class AppConfig {
+     ChoiceChipModel(keyName: dSWeight, title: '电子秤（报工总重）'),
+     ChoiceChipModel(keyName: scanGun, title: '扫码枪'),
+     ChoiceChipModel(keyName: cardReader, title: '读卡器'),
+-    ChoiceChipModel(keyName: serialNumberScan, title: '序列号'),
++    ChoiceChipModel(keyName: serialNumberScan, title: '序列号（报工）'),
+   ];
+ 
+ }

@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 
 
 ///设置页面 基础页
-abstract class BaseSettingController extends BaseFormController with BaseSettingInterface {
+abstract class BaseSettingController
+    extends BaseFormController
+    with BaseSettingInterface {
 
   ///是否显示头部组件
   final bool isShowHeadWidget;

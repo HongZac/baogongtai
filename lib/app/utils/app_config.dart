@@ -2505,6 +2505,37 @@ abstract class AppConfig {
   ///是否需要监测网络连接状态
   static const bool isNeedCheckNetwork = true;
 
+  ///电子秤（称重重量）
+  static const String dSEBWeight = 'device-submit-eBWeight';
+  ///电子秤（报单重的称重重量）
+  static const String dSEBWeightForWeightSubmitType = 'device-submit-eBWeight-for-weightSubmitType';
+  ///电子秤（单箱皮重）
+  static const String dSPackingWeight = 'device-submit-packingWeight';
+  ///电子秤（单箱重量）
+  static const String dSSingleBoxWeight = 'device-submit-singleBoxWeight';
+  ///电子秤（尾箱重量）
+  static const String dSLastBoxWeight = 'device-submit-lastBoxWeight';
+  ///电子秤（报工总重）
+  static const String dSWeight = 'device-submit-weight';
+  ///扫码枪
+  static const String scanGun = 'scan-gun';
+  ///读卡器
+  static const String cardReader = 'card-reader';
+  ///序列号
+  static const String serialNumberScan = 'serialNumber-scan';
+
+  static final List<ChoiceChipModel> socketDataList = [
+    ChoiceChipModel(keyName: dSEBWeight, title: '电子秤（称重重量）'),
+    ChoiceChipModel(keyName: dSEBWeightForWeightSubmitType, title: '电子秤（报单重的称重重量）'),
+    ChoiceChipModel(keyName: dSPackingWeight, title: '电子秤（单箱皮重）'),
+    ChoiceChipModel(keyName: dSSingleBoxWeight, title: '电子秤（单箱重量）'),
+    ChoiceChipModel(keyName: dSLastBoxWeight, title: '电子秤（尾箱重量）'),
+    ChoiceChipModel(keyName: dSWeight, title: '电子秤（报工总重）'),
+    ChoiceChipModel(keyName: scanGun, title: '扫码枪'),
+    ChoiceChipModel(keyName: cardReader, title: '读卡器'),
+    ChoiceChipModel(keyName: serialNumberScan, title: '序列号'),
+  ];
+
 }
 
 class AppConfigUtil {

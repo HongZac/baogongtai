@@ -10,10 +10,11 @@ import 'package:desktop/app/model/assignment_form_model.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/model/info_form_model.dart';
 import 'package:desktop/app/routes/app_routes.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
-import 'package:desktop/app/service/serial_com_service/serial_port_data_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/model/tcp_socket_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/utils/tcp_serial_data_utils.dart';
 import 'package:desktop/app/theme/app_colors.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/assignment_interface/assignment_interface.dart';
@@ -21,6 +22,7 @@ import 'package:desktop/app/ui/pages/home/base/interface/barcode_interface.dart'
 import 'package:desktop/app/ui/pages/home/base/interface/info_form_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/interface_util.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/inv_class_frx_name_interface/inv_class_frx_name_interface.dart';
+import 'package:desktop/app/ui/pages/home/base/interface/serial_number_scan_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/mes_submit_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/order_submit_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/submit_interface.dart';
@@ -50,10 +52,12 @@ class MesOrderSubmitController
     extends BaseFormController
     with InfoFormInterface,
         SerialPortGetXListenerMixin<MesOrderSubmitController>, ScanInterface<MesOrderSubmitController>,
+        TcpSocketGetxListenerMixin<MesOrderSubmitController>,
         AssignmentInterface,
         InvClassFrxNameInterface,
         SubmitPrintBarcodeInterface,
         SubmitInterface, MesSubmitInterface, OrderSubmitInterface,
+        SerialNumberScanInterface<MesOrderSubmitController>,
         InterfaceUtil {
 
   late final MesOrderDetailTabController mesOrderDetailTabController;
@@ -234,20 +238,6 @@ class MesOrderSubmitController
   @override
   Future<void> onReady() async {
     await super.onReady();
-
-    connectList.forEach((element) {
-      element.weightMsgConnectService = WeightMsgConnect(connectModel: element, onFire: (data) { ///数据处理
-        if (element.weightMsgConnectService == null){ return; }
-        portMsgOnData(
-          element.key,
-          data: data,
-          isWeightMsgReverseOrder: element.isWeightMsgReverseOrder,
-          accuracy: element.accuracy,
-        );
-        return null;
-      });
-      element.weightMsgConnectService!.onInit();
-    });
   }
 
   @override
@@ -723,14 +713,14 @@ class MesOrderSubmitController
   //endregion
 
 
-  //region 串口、扫码
+  //region 串口、扫码、TCP
 
   @override
   Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
-    for (var element in weightMsgConnectService.connectList){
+    for (var element in serialComService.serialPortMsgProcessList){
       if (element.com == serialPortDataModel.com){
         portMsgOnData(
-          element.key,
+          element.keyName,
           data: serialPortDataModel.data,
           accuracy: element.accuracy,
         );
@@ -744,25 +734,24 @@ class MesOrderSubmitController
     double accuracy = 0,
   }){
     switch (key){
-      case WeightMsgConnectService.dSPackingWeight:
+      case AppConfig.dSPackingWeight:
         //region 单箱皮重
         if (isUsePackingPicker || submitType != AppConfig.mesWeightBoxSubmit || submitType != AppConfig.mesWeightSubmit){ return; }
         //region 数据处理
         String formatValue = '';
         if (data.length > 3 && data.substring(0, 3) == '|O|'){ ///容器条码(周转箱条码): |O|序列号|皮重
           List<String> _list  = data.split('|');
-          formatValue = weightMsgConnectService.getFormatValue(_list.last);
+          formatValue = TcpSerialDataUtils.getFormatValue(_list.last);
         }
         else {
-          formatValue = weightMsgConnectService.getFormatValue(
+          formatValue = TcpSerialDataUtils.getFormatValue(
             data,
-            isWeightMsgReverseOrder: isWeightMsgReverseOrder,
           );
         }
         //endregion
         //region 判断差值
         String _oldString = NumPadUtil().getText(NumPadUtil.packingWeight, numPadCTList) ?? '';
-        bool isLessThen = weightMsgConnectService.isWithinAcceptableErrorRange(
+        bool isLessThen = TcpSerialDataUtils.isWithinAcceptableErrorRange(
             oldValue: double.tryParse(_oldString),
             value: double.tryParse(formatValue) ?? 0,
             errorRange: accuracy
@@ -773,16 +762,15 @@ class MesOrderSubmitController
         calcQty(NumPadUtil.packingWeight);
         //endregion
         break;
-      case WeightMsgConnectService.dSSingleBoxWeight:
+      case AppConfig.dSSingleBoxWeight:
         //region 单箱重量
         if (submitType != AppConfig.mesWeightBoxSubmit) { return; }
-        String formatValue = weightMsgConnectService.getFormatValue(
+        String formatValue = TcpSerialDataUtils.getFormatValue(
           data,
-          isWeightMsgReverseOrder: isWeightMsgReverseOrder,
         );
         //region 判断差值
         String _oldString = NumPadUtil().getText(NumPadUtil.singleBoxWeight, numPadCTList) ?? '';
-        bool isLessThen = weightMsgConnectService.isWithinAcceptableErrorRange(
+        bool isLessThen = TcpSerialDataUtils.isWithinAcceptableErrorRange(
             oldValue: double.tryParse(_oldString),
             value: double.tryParse(formatValue) ?? 0,
             errorRange: accuracy
@@ -793,16 +781,15 @@ class MesOrderSubmitController
         calcQty(NumPadUtil.singleBoxWeight);
         //endregion
         break;
-      case WeightMsgConnectService.dSLastBoxWeight:
+      case AppConfig.dSLastBoxWeight:
         //region 尾箱重量
         if (submitType != AppConfig.mesWeightBoxSubmit) { return; }
-        String formatValue = weightMsgConnectService.getFormatValue(
+        String formatValue = TcpSerialDataUtils.getFormatValue(
           data,
-          isWeightMsgReverseOrder: isWeightMsgReverseOrder,
         );
         //region 判断差值
         String _oldString = NumPadUtil().getText(NumPadUtil.lastBoxWeight, numPadCTList) ?? '';
-        bool isLessThen = weightMsgConnectService.isWithinAcceptableErrorRange(
+        bool isLessThen = TcpSerialDataUtils.isWithinAcceptableErrorRange(
             oldValue: double.tryParse(_oldString),
             value: double.tryParse(formatValue) ?? 0,
             errorRange: accuracy
@@ -813,16 +800,15 @@ class MesOrderSubmitController
         calcQty(NumPadUtil.lastBoxWeight);
         //endregion
         break;
-      case WeightMsgConnectService.dSWeight:
+      case AppConfig.dSWeight:
         //region 报工总重
         if (submitType != AppConfig.mesWeightSubmit && submitType != AppConfig.mesWeightBoxSubmit) { return; }
-        String formatValue = weightMsgConnectService.getFormatValue(
+        String formatValue = TcpSerialDataUtils.getFormatValue(
           data,
-          isWeightMsgReverseOrder: isWeightMsgReverseOrder,
         );
         //region 判断差值
         String _oldString = NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '';
-        bool isLessThen = weightMsgConnectService.isWithinAcceptableErrorRange(
+        bool isLessThen = TcpSerialDataUtils.isWithinAcceptableErrorRange(
             oldValue: double.tryParse(_oldString),
             value: double.tryParse(formatValue) ?? 0,
             errorRange: accuracy
@@ -833,9 +819,15 @@ class MesOrderSubmitController
         calcQty(NumPadUtil.weight);
         //endregion
         break;
-      case WeightMsgConnectService.scanGun:
-      case WeightMsgConnectService.cardReader:
+      case AppConfig.scanGun:
+      case AppConfig.cardReader:
         onBarcode(data);
+        break;
+      case AppConfig.serialNumberScan:
+        serialNumberScanOnBarcode(
+          searchString: data,
+          invCCode: orderModel.invCCode,
+        );
         break;
     }
   }
@@ -1692,6 +1684,19 @@ class MesOrderSubmitController
     ProgressDialogUtil.update(value: 1);
   }
 
+  @override
+  Future<void> onTcpSocketData(TcpSocketDataModel tcpSocketDataModel) async {
+    for (var element in tcpSocketService.tcpSocketMsgProcessList){
+      if (element.host == tcpSocketDataModel.host && element.port == tcpSocketDataModel.port){
+        portMsgOnData(
+          element.keyName,
+          data: tcpSocketDataModel.data,
+          accuracy: element.accuracy,
+        );
+      }
+    }
+  }
+
   //endregion
 
 
@@ -2314,12 +2319,6 @@ class MesOrderSubmitController
 
   @override
   void onClose() {
-    connectList.forEach((element){
-      if (element.weightMsgConnectService != null){
-        element.weightMsgConnectService!.onClose();
-        element.weightMsgConnectService = null;
-      }
-    });
     numPadDebounce.dispose();
     numPadCTList.forEach((element) {
       element.dispose();

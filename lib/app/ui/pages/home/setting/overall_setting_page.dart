@@ -2,7 +2,6 @@ import 'dart:core';
 
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/routes/mine_get_delegate.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_model.dart';
 import 'package:desktop/app/theme/font_family_config.dart';
 import 'package:desktop/app/translation/language_config.dart';
 import 'package:desktop/app/ui/widget/color_picker.dart';
@@ -148,7 +147,6 @@ class OverallSettingPage extends GetView<OverallSettingController> {
     return [
       tabWidget(context, _),
       printWidget(context, _),
-      weightMsgWidget(context, _),
       ttsWidget(context, _),
       themeWidget(context, _),
       languageWidget(context, _),
@@ -308,68 +306,6 @@ class OverallSettingPage extends GetView<OverallSettingController> {
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget weightMsgWidget(BuildContext context, OverallSettingController _){
-    return Column(
-      children: [
-        Expanded(
-          child: ListView(
-            children: List.generate(_.weightMsgConnectService.weightMsgList.length, (index){
-              ChoiceChipModel item = _.weightMsgConnectService.weightMsgList[index];
-              WeightMsgConnectModel? model = _.weightMsgConnectService.connectList.firstWhereOrNull(
-                      (element) => element.key == item.keyName);
-              return ListTile(
-                title: Text(
-                  '${item.title}',
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    fontWeight: FontWeight.w600
-                  ),
-                ),
-                subtitle: Text(
-                  '${model != null ? '${model.host}:${model.port} （${model.accuracy}；${model.isWeightMsgReverseOrder ? '反向' : ''}）' : ''}',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.outline
-                  ), maxLines: 1, overflow: TextOverflow.ellipsis,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FilledButton(
-                      onPressed: () async{
-                        await controller.weightMsgConnectService.setting(item.keyName);
-                      },
-                      child: Text(
-                        '修改',
-                        style: TextStyle(
-                          fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4,),
-                    FilledButton(
-                      onPressed: () async{
-                        await controller.weightMsgConnectService.delete(item.keyName);
-                      },
-                      child: Text(
-                        '删除',
-                        style: TextStyle(
-                          fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize,
-                        ),
-                      ),
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.secondary),
-                      ),
-                    ),
-                  ],
-                )
-              );
-            }).toList(),
-          ),
-        )
       ],
     );
   }

@@ -451,22 +451,22 @@ class HomeView extends GetView<HomeController> {
         iconColor: Theme.of(context).navigationRailTheme.unselectedLabelTextStyle!.color
       ),
       MineIconButton(
+        onPressed: () async {
+          await controller.tcpSocketService();
+        },
+        tooltip: 'TCP 设置',
+        padding: EdgeInsets.zero,
+        icon: Icons.compare_arrows,
+        iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
+        iconColor: Theme.of(context).navigationRailTheme.unselectedLabelTextStyle!.color
+      ),
+      MineIconButton(
         onPressed: () async{
           await controller.setting();
         },
         tooltip: '全局设置',
         padding: EdgeInsets.zero,
         icon: FluentIcons.settings_20_regular,
-        iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
-        iconColor: Theme.of(context).navigationRailTheme.unselectedLabelTextStyle!.color,
-      ),
-      MineIconButton(
-        onPressed: () async{
-          await controller.loginOut();
-        },
-        tooltip: '切换账号',
-        padding: EdgeInsets.zero,
-        icon: FluentIcons.arrow_exit_20_regular,
         iconSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.43,
         iconColor: Theme.of(context).navigationRailTheme.unselectedLabelTextStyle!.color,
       ),

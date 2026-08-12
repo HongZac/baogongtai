@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 
 
 ///分页数据 基本页
-abstract class BaseFormWithPageDataController<T extends ICloneable> extends BaseFormController with BaseFormWithPageDataInterface<T> {
+abstract class BaseFormWithPageDataController<T extends ICloneable>
+    extends BaseFormController
+    with BaseFormWithPageDataInterface<T> {
 
   ///是否显示底部内容
   final bool isShowFootWidget;

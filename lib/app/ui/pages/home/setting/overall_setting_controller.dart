@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/service/tts_service.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
 import 'package:desktop/app/theme/app_theme.dart';
 import 'package:desktop/app/theme/app_theme_mode.dart';
 import 'package:desktop/app/theme/font_family_config.dart';
@@ -45,7 +44,6 @@ class OverallSettingController extends GetxController with GetSingleTickerProvid
   final List<ChoiceChipModel> tabValueList = [
     ChoiceChipModel(icon: Icons.filter_alt_sharp, title: '默认选项卡', keyName: 'tab', isSelected: true),
     ChoiceChipModel(icon: Icons.print_rounded, title: '打印设置', keyName: 'print', isSelected: false),
-    ChoiceChipModel(icon: Icons.compare_arrows, title: 'TCP 连接设置', keyName: 'weightMsg', isSelected: false),
     ChoiceChipModel(icon: FluentIcons.speaker_settings_24_filled, title: '语音播报参数设置', keyName: 'tts', isSelected: false),
     ChoiceChipModel(icon: Icons.color_lens, title: '主题设置', keyName: 'theme', isSelected: false),
     ChoiceChipModel(icon: Icons.language, title: '语言设置', keyName: 'language', isSelected: false),
@@ -68,10 +66,6 @@ class OverallSettingController extends GetxController with GetSingleTickerProvid
   String printType = ShareStorageUtil.instance?.read(SharedPreferencesKeys.PRINT_TYPE_KEY) ?? AppConfig.printType;
   ///打印时是否显示参数设置
   bool isShowPrintSetting = ShareStorageUtil.instance?.read(SharedPreferencesKeys.IS_SHOW_PRINT_SETTING_KEY) ?? AppConfig.isShowPrintSetting;
-  //endregion
-
-  //region 称重消息参数
-  final WeightMsgConnectService weightMsgConnectService = Get.find<WeightMsgConnectService>();
   //endregion
 
   //region 语音播报参数设置

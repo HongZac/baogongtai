@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 
 
 ///对话框控制器基类
-abstract class BaseDialogController extends GetxController with DialogControllerInterface {
+abstract class BaseDialogController
+    extends GetxController
+    with DialogControllerInterface {
 
   final RootController rootCtl = Get.find<RootController>();
 

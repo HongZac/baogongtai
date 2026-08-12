@@ -97,10 +97,12 @@ class MenuFlyoutItem extends MenuFlyoutItemInterface {
     Key? key,
     this.icon,
     this.iconSize,
+    this.iconColor,
     this.label,
     this.field,
     this.semanticLabel,
     this.fontSize,
+    this.fontColor,
     this.trailing,
     required this.onPressed,
     this.selected = false,
@@ -109,8 +111,10 @@ class MenuFlyoutItem extends MenuFlyoutItemInterface {
 
   final IconData? icon;
   final double? iconSize;
+  final Color? iconColor;
   final String? label;
   final double? fontSize;
+  final Color? fontColor;
   final IconData? trailing;
   final VoidCallback? onPressed;
   final bool selected;
@@ -124,6 +128,9 @@ class MenuFlyoutItem extends MenuFlyoutItemInterface {
   Widget build(BuildContext context) {
     double fontSize = this.fontSize ?? Theme.of(context).textTheme.bodySmall?.fontSize ?? 12;
     double iconSize = this.iconSize ?? (Theme.of(context).textTheme.bodySmall?.fontSize ?? 12) * 1.3;
+    Color fontColor = this.fontColor ?? Theme.of(context).textTheme.bodySmall!.color!;
+    Color iconColor = this.iconColor ?? Theme.of(context).textTheme.bodySmall!.color!;
+
     return Container(
       constraints: BoxConstraints(maxWidth: maxWidth),
       child: FlyoutListTile(
@@ -133,7 +140,7 @@ class MenuFlyoutItem extends MenuFlyoutItemInterface {
             size: iconSize,
             color: onPressed == null
                 ? Theme.of(context).disabledColor
-                : Theme.of(context).textTheme.bodySmall!.color
+                : iconColor
         ),
         text: label == null ? const SizedBox.shrink() : Text(
           label!,
@@ -141,7 +148,7 @@ class MenuFlyoutItem extends MenuFlyoutItemInterface {
               fontSize: fontSize,
               color: onPressed == null
                   ? Theme.of(context).disabledColor
-                  : Theme.of(context).textTheme.bodySmall!.color
+                  : fontColor
           ),
         ),
         trailing: trailing == null ? null : Icon(
@@ -149,7 +156,7 @@ class MenuFlyoutItem extends MenuFlyoutItemInterface {
             size: iconSize,
             color: onPressed == null
                 ? Theme.of(context).disabledColor
-                : Theme.of(context).textTheme.bodySmall!.color
+                : iconColor
         ),
         onPressed: onPressed,
       ),

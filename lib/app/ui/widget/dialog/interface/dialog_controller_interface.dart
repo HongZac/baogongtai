@@ -7,7 +7,7 @@ enum DialogButtonActionEnum {
    button1
 }
 
-abstract class DialogControllerInterface {
+mixin DialogControllerInterface {
 
   ///对话框按钮事件 （返回 true 关闭弹窗，）
   Future<DialogReturnDataModel> dialogActionPressed(DialogButtonActionEnum actionName) async {

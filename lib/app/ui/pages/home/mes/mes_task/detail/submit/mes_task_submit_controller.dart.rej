@@ -1,0 +1,22 @@
+diff a/lib/app/ui/pages/home/mes/mes_task/detail/submit/mes_task_submit_controller.dart b/lib/app/ui/pages/home/mes/mes_task/detail/submit/mes_task_submit_controller.dart	(rejected hunks)
+@@ -236,20 +240,6 @@ class MesTaskSubmitController
+   @override
+   Future<void> onReady() async{
+     await super.onReady();
+-
+-    connectList.forEach((element) {
+-      element.weightMsgConnectService = WeightMsgConnect(connectModel: element, onFire: (data) { ///数据处理
+-        if (element.weightMsgConnectService == null){ return; }
+-        portMsgOnData(
+-          element.key,
+-          data: data,
+-          isWeightMsgReverseOrder: element.isWeightMsgReverseOrder,
+-          accuracy: element.accuracy,
+-        );
+-        return null;
+-      });
+-      element.weightMsgConnectService!.onInit();
+-    });
+   }
+ 
+   @override

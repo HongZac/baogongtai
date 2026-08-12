@@ -7,9 +7,10 @@ import 'package:basement/repository.dart';
 import 'package:basement/utils.dart';
 import 'package:desktop/app/model/mo_sign_model.dart';
 import 'package:desktop/app/routes/app_routes.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
-import 'package:desktop/app/service/serial_com_service/serial_port_data_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/model/tcp_socket_data_model.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/barcode_interface.dart';
 import 'package:desktop/app/ui/pages/home/mesm/quality_inspection/mo_task_choice_to_check_voucher/mo_task_choice_to_check_voucher_controller.dart';
@@ -28,7 +29,8 @@ import 'package:get/get.dart';
 ///质量巡检 报检单、检验单列表页面 （首页）
 class QualityInspectionController
     extends BaseFormController
-    with SerialPortGetXListenerMixin<QualityInspectionController>, ScanInterface<QualityInspectionController> {
+    with SerialPortGetXListenerMixin<QualityInspectionController>, ScanInterface<QualityInspectionController>,
+        TcpSocketGetxListenerMixin<QualityInspectionController> {
 
   ///报检单（待检验）列表（首巡末完自检）
   final List<MoInspectModel> inspectList = [];
@@ -649,14 +651,14 @@ class QualityInspectionController
   //endregion
 
 
-  //region 串口、扫码
+  //region 串口、扫码、TCP
 
   @override
   Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
-    for (var element in weightMsgConnectService.connectList){
+    for (var element in serialComService.serialPortMsgProcessList){
       if (element.com == serialPortDataModel.com){
         portMsgOnData(
-          element.key,
+          element.keyName,
           data: serialPortDataModel.data,
           accuracy: element.accuracy,
         );
@@ -670,8 +672,8 @@ class QualityInspectionController
     double accuracy = 0,
   }){
     switch (key){
-      case WeightMsgConnectService.scanGun:
-      case WeightMsgConnectService.cardReader:
+      case AppConfig.scanGun:
+      case AppConfig.cardReader:
         onBarcode(data);
         break;
     }
@@ -775,6 +777,19 @@ class QualityInspectionController
     checkVoucherListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
       checkVoucherListPageConfig.queryData![keyWord] = keyValue;
+    }
+  }
+
+  @override
+  Future<void> onTcpSocketData(TcpSocketDataModel tcpSocketDataModel) async {
+    for (var element in tcpSocketService.tcpSocketMsgProcessList){
+      if (element.host == tcpSocketDataModel.host && element.port == tcpSocketDataModel.port){
+        portMsgOnData(
+          element.keyName,
+          data: tcpSocketDataModel.data,
+          accuracy: element.accuracy,
+        );
+      }
     }
   }
 

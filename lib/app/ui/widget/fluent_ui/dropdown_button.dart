@@ -1,8 +1,10 @@
+import 'package:basement/utils.dart';
 import 'package:desktop/app/ui/widget/fluent_ui/command_bars/flyout.dart';
 import 'package:desktop/app/ui/widget/fluent_ui/command_bars/flyout_controller.dart';
 import 'package:desktop/app/ui/widget/fluent_ui/command_bars/menu.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 
 const double _kVerticalOffset = 20.0;
@@ -34,11 +36,12 @@ typedef DropDownButtonBuilder = Widget Function(
 class DropDownButton extends StatefulWidget {
   /// Creates a dropdown button.
   const DropDownButton({
-    Key? key,
+    super.key,
     this.buttonBuilder,
     required this.items,
     this.leading,
     this.title,
+    this.tooltip,
     this.trailing,
     this.verticalOffset = _kVerticalOffset,
     this.horizontalOffset = _kHorizontalOffset,
@@ -55,8 +58,8 @@ class DropDownButton extends StatefulWidget {
     this.onOpen,
     this.onClose,
     this.parentFlyoutController,
-  })  : assert(items.length > 0, 'You must provide at least one item'),
-        super(key: key);
+    this.padding,
+  })  : assert(items.length > 0, 'You must provide at least one item');
 
   /// A builder for the button. If null, a [Button] with [leading], [title] and
   /// [trailing] is used.
@@ -74,6 +77,7 @@ class DropDownButton extends StatefulWidget {
   /// Usually a [Text]
   final Widget? title;
 
+  final String? tooltip;
   /// Trailing show a content at the right of this widget.
   ///
   /// If null, a chevron_down is displayed.
@@ -138,6 +142,9 @@ class DropDownButton extends StatefulWidget {
 
   final FlyoutController? parentFlyoutController;
 
+  final EdgeInsets? padding;
+
+
   @override
   State<DropDownButton> createState() => _DropDownButtonState();
 
@@ -164,9 +171,46 @@ class DropDownButton extends StatefulWidget {
 }
 
 class _DropDownButtonState extends State<DropDownButton> {
+
   final flyoutController = FlyoutController();
 
   final flyoutStateKey = GlobalKey<FlyoutState>();
+
+  final GlobalKey _singleChildScrollViewKey = GlobalKey();
+  final double minWidth = GetPlatform.isWindows ? 110 : GetPlatform.isMacOS ? 140 : 100;
+  late double maxWidth = minWidth;
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      final context = _singleChildScrollViewKey.currentContext;
+      try {
+        if (context != null) {
+          final box = context.findRenderObject() as RenderBox;
+          double? newMaxWidth;
+          if (box.size.width > minWidth){
+            newMaxWidth = box.size.width;
+          }
+          else if (maxWidth != minWidth) {
+            newMaxWidth = minWidth;
+          }
+          if (newMaxWidth != null && maxWidth != newMaxWidth){
+            PrintUtil.printDebug('下拉框宽度更新：$newMaxWidth');
+            maxWidth = newMaxWidth;
+            if (!mounted){
+              return;
+            }
+            setState(() { });
+          }
+        }
+      } catch(e){
+        PrintUtil.printDebug('获取隐藏渲染测量数据时出错：$e');
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -185,57 +229,101 @@ class _DropDownButtonState extends State<DropDownButton> {
       widget.trailing ?? _kDefaultDropdownButtonTrailing,
     ];
 
-    return Flyout(
-      key: flyoutStateKey,
-      openMode: widget.openMode, ///弹出框打开方式
-      placement: widget.placement,
-      position: widget.position,
-      verticalOffset: widget.verticalOffset,
-      horizontalOffset: widget.horizontalOffset,
-      controller: flyoutController,
-      onOpen: widget.onOpen,
-      onClose: widget.onClose,
-      child: Builder(builder: (context) {
-        return widget.buttonBuilder?.call(
-          context,
-          widget.disabled ? null : flyoutController.open,
-        ) ??
-        TextButton(
-          onPressed: widget.disabled ? null : flyoutController.open,
-          autofocus: widget.autofocus,
-          focusNode: widget.focusNode,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 6, top: 6, bottom: 6, right: 3),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: buttonChildren,
-            )
-          ),
-        );
-      }),
-      content: (context) {
-        return MenuFlyout(
-          surfaceTintColor: widget.surfaceTintColor,
-          shape: widget.menuShape,
-          items: widget.items.map((item) {
-            MenuFlyoutItem menuFlyoutItem = MenuFlyoutItem(
-              icon: item.icon,
-              iconSize: item.iconSize,
-              label: item.label,
-              fontSize: item.fontSize,
-              trailing: item.trailing,
-              selected: item.selected,
-              maxWidth: item.maxWidth,
-              onPressed: (){
-                item.onPressed?.call();
-                flyoutStateKey.currentState!.controller.close();
-                widget.parentFlyoutController?.close();
-              },
+    return Column(
+      children: [
+        Flyout(
+          key: flyoutStateKey,
+          openMode: widget.openMode, ///弹出框打开方式
+          placement: widget.placement,
+          position: widget.position,
+          verticalOffset: widget.verticalOffset,
+          horizontalOffset: widget.horizontalOffset,
+          controller: flyoutController,
+          onOpen: widget.onOpen,
+          onClose: widget.onClose,
+          child: Builder(builder: (context) {
+            return widget.buttonBuilder?.call(
+              context,
+              widget.disabled ? null : flyoutController.open,
+            ) ??
+                Tooltip(
+                  message: widget.tooltip ?? '',
+                  child:TextButton(
+                    onPressed: widget.disabled ? null : flyoutController.open,
+                    autofocus: widget.autofocus,
+                    focusNode: widget.focusNode,
+                    child: Padding(
+                        padding: widget.padding ?? const EdgeInsets.only(left: 5, top: 5, bottom: 5, right: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: buttonChildren,
+                        )
+                    ),
+                  ),
+                );
+
+          }),
+          content: (context) {
+            return MenuFlyout(
+              surfaceTintColor: widget.surfaceTintColor,
+              shape: widget.menuShape,
+              constraints: BoxConstraints(minWidth: minWidth, maxWidth: maxWidth),
+              items: widget.items.map((item) {
+                MenuFlyoutItem menuFlyoutItem = MenuFlyoutItem(
+                  icon: item.icon,
+                  iconSize: item.iconSize,
+                  label: item.label,
+                  fontSize: item.fontSize,
+                  trailing: item.trailing,
+                  onPressed: () async {
+                    item.onPressed?.call();
+                    flyoutStateKey.currentState!.controller.close();
+                    widget.parentFlyoutController?.close();
+                  },
+                );
+                return menuFlyoutItem;
+              }).toList(),
             );
-            return menuFlyoutItem;
-          }).toList(),
-        );
-      },
+          },
+        ),
+        ///隐藏渲染测量
+        Offstage(
+          offstage: true,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              key: _singleChildScrollViewKey,
+              children: widget.items.map((e){
+                return Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (e.icon != null)
+                        Icon(
+                          e.icon!,
+                          size: e.iconSize,
+                        ),
+                      if (e.label != null)
+                        Text(
+                          e.label!,
+                          style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                            fontSize: e.fontSize,
+                          ),
+                        ),
+                      if (e.trailing != null)
+                        Icon(
+                          e.trailing!,
+                          size: e.iconSize,
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

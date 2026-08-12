@@ -13,9 +13,10 @@ import 'package:desktop/app/model/command_bar_btn_model.dart';
 import 'package:desktop/app/model/info_form_model.dart';
 import 'package:desktop/app/model/web_socket_model.dart';
 import 'package:desktop/app/routes/app_routes.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
-import 'package:desktop/app/service/serial_com_service/serial_port_data_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/model/tcp_socket_data_model.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form_with_page_data/base_form_with_page_data_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/barcode_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/command_bar_interface.dart';
@@ -54,6 +55,7 @@ class MesOrderController
         DateFilterInterface, OrderDateFilterInterface,
         SearchInterface, OrderKeywordSearchInterface,
         SerialPortGetXListenerMixin<MesOrderController>, ScanInterface<MesOrderController>,
+        TcpSocketGetxListenerMixin<MesOrderController>,
         WebSocketStreamInterface,
         InfoFormInterface,
         CommandBarInterface,
@@ -382,14 +384,14 @@ class MesOrderController
   //endregion
 
 
-  //region 串口、扫码
+  //region 串口、扫码、TCP
 
   @override
   Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
-    for (var element in weightMsgConnectService.connectList){
+    for (var element in serialComService.serialPortMsgProcessList){
       if (element.com == serialPortDataModel.com){
         portMsgOnData(
-          element.key,
+          element.keyName,
           data: serialPortDataModel.data,
           accuracy: element.accuracy,
         );
@@ -403,8 +405,8 @@ class MesOrderController
     double accuracy = 0,
   }){
     switch (key){
-      case WeightMsgConnectService.scanGun:
-      case WeightMsgConnectService.cardReader:
+      case AppConfig.scanGun:
+      case AppConfig.cardReader:
         onBarcode(data);
         break;
     }
@@ -573,6 +575,19 @@ class MesOrderController
     dataListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
       dataListPageConfig.queryData![keyWord] = keyValue;
+    }
+  }
+
+  @override
+  Future<void> onTcpSocketData(TcpSocketDataModel tcpSocketDataModel) async {
+    for (var element in tcpSocketService.tcpSocketMsgProcessList){
+      if (element.host == tcpSocketDataModel.host && element.port == tcpSocketDataModel.port){
+        portMsgOnData(
+          element.keyName,
+          data: tcpSocketDataModel.data,
+          accuracy: element.accuracy,
+        );
+      }
     }
   }
 

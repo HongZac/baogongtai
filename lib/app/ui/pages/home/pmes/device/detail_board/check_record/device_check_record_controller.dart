@@ -5,10 +5,11 @@ import 'package:basement/repository.dart';
 import 'package:basement/utils.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/model/info_form_model.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
-import 'package:desktop/app/service/serial_com_service/serial_port_data_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/model/tcp_socket_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/utils/tcp_serial_data_utils.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/barcode_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/check_record_interface/check_record_interface.dart';
@@ -39,6 +40,7 @@ class DeviceCheckRecordController
     extends BaseFormController
     with InfoFormInterface,
         SerialPortGetXListenerMixin<DeviceCheckRecordController>, ScanInterface<DeviceCheckRecordController>,
+        TcpSocketGetxListenerMixin<DeviceCheckRecordController>,
         InvClassFrxNameInterface,
         CheckRecordPrintBarcodeInterface,
         CheckRecordInterface, PMesTaskCheckRecordInterface,
@@ -136,20 +138,6 @@ class DeviceCheckRecordController
   @override
   Future<void> onReady() async{
     await super.onReady();
-
-    connectList.forEach((element) {
-      element.weightMsgConnectService = WeightMsgConnect(connectModel: element, onFire: (data) { ///数据处理
-        if (element.weightMsgConnectService == null){ return; }
-        portMsgOnData(
-          element.key,
-          data: data,
-          isWeightMsgReverseOrder: element.isWeightMsgReverseOrder,
-          accuracy: element.accuracy,
-        );
-        return null;
-      });
-      element.weightMsgConnectService!.onInit();
-    });
   }
 
   @override
@@ -332,14 +320,14 @@ class DeviceCheckRecordController
   //endregion
 
 
-  //region 串口、扫码
+  //region 串口、扫码、TCP
 
   @override
   Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
-    for (var element in weightMsgConnectService.connectList){
+    for (var element in serialComService.serialPortMsgProcessList){
       if (element.com == serialPortDataModel.com){
         portMsgOnData(
-          element.key,
+          element.keyName,
           data: serialPortDataModel.data,
           accuracy: element.accuracy,
         );
@@ -353,16 +341,15 @@ class DeviceCheckRecordController
     double accuracy = 0,
   }){
     switch (key){
-      case WeightMsgConnectService.dSWeight:
+      case AppConfig.dSWeight:
         //region 报工总重
         if (checkRecordType != AppConfig.weightCheckRecord) { return; }
-        String formatValue = weightMsgConnectService.getFormatValue(
+        String formatValue = TcpSerialDataUtils.getFormatValue(
           data,
-          isWeightMsgReverseOrder: isWeightMsgReverseOrder,
         );
         //region 判断差值
         String _oldString = NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '';
-        bool isLessThen = weightMsgConnectService.isWithinAcceptableErrorRange(
+        bool isLessThen = TcpSerialDataUtils.isWithinAcceptableErrorRange(
             oldValue: double.tryParse(_oldString),
             value: double.tryParse(formatValue) ?? 0,
             errorRange: accuracy
@@ -373,8 +360,8 @@ class DeviceCheckRecordController
         calcQty(NumPadUtil.weight);
         //endregion
         break;
-      case WeightMsgConnectService.scanGun:
-      case WeightMsgConnectService.cardReader:
+      case AppConfig.scanGun:
+      case AppConfig.cardReader:
         onBarcode(data);
         break;
     }
@@ -635,6 +622,19 @@ class DeviceCheckRecordController
     isLoading = false;
     update();
     ProgressDialogUtil.update(value: 1);
+  }
+
+  @override
+  Future<void> onTcpSocketData(TcpSocketDataModel tcpSocketDataModel) async {
+    for (var element in tcpSocketService.tcpSocketMsgProcessList){
+      if (element.host == tcpSocketDataModel.host && element.port == tcpSocketDataModel.port){
+        portMsgOnData(
+          element.keyName,
+          data: tcpSocketDataModel.data,
+          accuracy: element.accuracy,
+        );
+      }
+    }
   }
 
   //endregion
@@ -914,12 +914,6 @@ class DeviceCheckRecordController
 
   @override
   void onClose() {
-    connectList.forEach((element){
-      if (element.weightMsgConnectService != null){
-        element.weightMsgConnectService!.onClose();
-        element.weightMsgConnectService = null;
-      }
-    });
     numPadDebounce.dispose();
     for (var element in numPadCTList) {
       element.dispose();

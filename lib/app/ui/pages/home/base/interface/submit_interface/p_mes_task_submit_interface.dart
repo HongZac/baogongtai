@@ -6,8 +6,6 @@ import 'package:basement/utils.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/pickers/adapter_helper.dart';
 import 'package:desktop/app/service/data_service.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/submit_interface.dart';
 import 'package:desktop/app/ui/widget/num_pad/num_pad_util.dart';
 import 'package:desktop/app/utils/app_config.dart';
@@ -29,11 +27,6 @@ mixin PMesTaskSubmitInterface on SubmitInterface {
 
   @override
   List<ChoiceChipModel> get operationWayList => List.unmodifiable(AppConfig.pMesTaskSubmitOperationWayList);
-
-  final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
-  ///称重监听列表
-  late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
-          (element) => true).toList();
 
   ///显示“获取实际单重”按钮
   bool isShowGetPieceWeightBtn = AppConfig.isShowGetPieceWeightBtn;

@@ -21,6 +21,11 @@ class DialogUtils {
   ///打开的弹窗个数
   static int _dialogOpenNum = 0;
 
+  ///打开的是内容弹窗，前一个页面禁止串口监听
+  static bool get isCustomDialogOpen => _customDialogOpenNum > 0;
+  ///打开的内容弹窗的个数
+  static int _customDialogOpenNum = 0;
+
   static ButtonStyle dialogActionBtnStyle = kIsWeb || GetPlatform.isWindows ?
   ButtonStyle(
     padding: WidgetStateProperty.all(
@@ -393,6 +398,7 @@ class DialogUtils {
   }) {
     bool isOpen = true; ///弹窗是否打开
     _dialogOpenNum ++;
+    _customDialogOpenNum ++;
     bool isLoading = false; ///是否正在提交数据
     if (controller != null){
       Get.put<T>(controller, tag: tag);
@@ -576,6 +582,7 @@ class DialogUtils {
       }
       isOpen = false;
       _dialogOpenNum --;
+      _customDialogOpenNum --;
       return value;
     });
   }

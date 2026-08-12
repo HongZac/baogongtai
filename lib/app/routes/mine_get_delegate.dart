@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:basement/utils.dart';
 import 'package:desktop/app/routes/app_pages.dart';
 import 'package:desktop/app/routes/app_routes.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_page.dart';
 import 'package:desktop/app/ui/pages/home/base/base_tab/base_tab_page.dart';
@@ -131,7 +131,7 @@ class MineGetDelegate extends GetDelegate {
     }
   }
 
-  ///进入到新页面前或是打开弹窗前：
+  ///进入到新页面前或是打开弹窗（内容弹窗）前：
   ///
   ///扫码图标、任务说明图标重置为 null；
   ///
@@ -240,7 +240,7 @@ class MineGetDelegate extends GetDelegate {
 
   ///写入日志
   Future<void> writeLog(String str) async {
-    PrintUtil.printDebug(str);
+    //PrintUtil.printDebug(str);
     return;
     try {
       File testFile = File('${ShareStorageUtil.logDirectory!.path}\\'

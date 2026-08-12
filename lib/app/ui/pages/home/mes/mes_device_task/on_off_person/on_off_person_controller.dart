@@ -5,12 +5,14 @@ import 'package:basement/repository.dart';
 import 'package:basement/utils.dart';
 import 'package:desktop/app/model/dialog_return_data_model.dart';
 import 'package:desktop/app/pickers/adapter_helper.dart';
-import 'package:desktop/app/service/serial_com_service/mixin/serial_port_getx_listener.dart';
-import 'package:desktop/app/service/serial_com_service/serial_port_data_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/mixin/serial_port_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/model/tcp_socket_data_model.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/barcode_interface.dart';
 import 'package:desktop/app/ui/widget/dialog/interface/dialog_controller_interface.dart';
+import 'package:desktop/app/utils/app_config.dart';
 import 'package:desktop/app/utils/progress_dialog_util.dart';
 import 'package:desktop/app/utils/tips_utils.dart';
 import 'package:desktop/app/utils/toast_notification.dart';
@@ -22,7 +24,8 @@ import 'package:get/get.dart';
 ///员工上下岗
 class OnOffPersonController
     extends BaseFormController
-    with SerialPortGetXListenerMixin<OnOffPersonController>, ScanInterface<OnOffPersonController> {
+    with SerialPortGetXListenerMixin<OnOffPersonController>, ScanInterface<OnOffPersonController>, 
+        TcpSocketGetxListenerMixin<OnOffPersonController> {
 
   final String deviceId;
 
@@ -147,14 +150,14 @@ class OnOffPersonController
   }
 
 
-  //region 串口、扫码
+  //region 串口、扫码、TCP
 
   @override
   Future<void> onSerialPortData(SerialPortDataModel serialPortDataModel) async {
-    for (var element in weightMsgConnectService.connectList){
+    for (var element in serialComService.serialPortMsgProcessList){
       if (element.com == serialPortDataModel.com){
         portMsgOnData(
-          element.key,
+          element.keyName,
           data: serialPortDataModel.data,
           accuracy: element.accuracy,
         );
@@ -168,8 +171,8 @@ class OnOffPersonController
     double accuracy = 0,
   }){
     switch (key){
-      case WeightMsgConnectService.scanGun:
-      case WeightMsgConnectService.cardReader:
+      case AppConfig.scanGun:
+      case AppConfig.cardReader:
         onBarcode(data);
         break;
     }
@@ -286,6 +289,19 @@ class OnOffPersonController
     isLoading = false;
     update();
     ProgressDialogUtil.update(value: 1);
+  }
+
+  @override
+  Future<void> onTcpSocketData(TcpSocketDataModel tcpSocketDataModel) async {
+    for (var element in tcpSocketService.tcpSocketMsgProcessList){
+      if (element.host == tcpSocketDataModel.host && element.port == tcpSocketDataModel.port){
+        portMsgOnData(
+          element.keyName,
+          data: tcpSocketDataModel.data,
+          accuracy: element.accuracy,
+        );
+      }
+    }
   }
 
   //endregion

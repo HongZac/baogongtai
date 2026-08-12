@@ -251,11 +251,13 @@ class CommandBarState extends State<CommandBar> {
             children: List.generate(allSecondaryItems.length, (index) {
               CommandBarItem item = allSecondaryItems[index];
               if (item is CommandBarButton){
-                CommandBarButton commandBarButton =  CommandBarButton(
+                CommandBarButton commandBarButton = CommandBarButton(
                   icon: item.icon,
                   iconSize: item.iconSize,
+                  iconColor: item.iconColor,
                   label: item.label,
                   fontSize: item.fontSize,
+                  fontColor: item.fontColor,
                   onPressed: (){
                     item.onPressed?.call();
                     secondaryFlyoutController.close();
@@ -271,17 +273,23 @@ class CommandBarState extends State<CommandBar> {
                 return commandBarButton.build(context, CommandBarItemDisplayMode.inSecondary,);
               }
               else if (item is CommandBarDropdown){
-                CommandBarDropdown commandBarDropdown =  CommandBarDropdown(
+                CommandBarDropdown commandBarDropdown = CommandBarDropdown(
                   icon: item.icon,
                   iconSize: item.iconSize,
+                  iconColor: item.iconColor,
                   label: item.label,
                   fontSize: item.fontSize,
+                  fontColor: item.fontColor,
                   onPressed: item.onPressed,
                   focusNode: item.focusNode,
                   items: item.items,
                   autofocus: item.autofocus,
                   message: item.message,
                   parentFlyoutController: secondaryFlyoutController,
+                  isShowTrailing: item.isShowTrailing,
+                  verticalOffset: item.verticalOffset,
+                  horizontalOffset: item.horizontalOffset,
+                  position: item.position,
                 );
                 return commandBarDropdown.build(context, CommandBarItemDisplayMode.inSecondary,);
               }
@@ -606,8 +614,10 @@ class CommandBarButton extends CommandBarItem {
 class CommandBarDropdown extends CommandBarItem {
   final IconData? icon;
   final double? iconSize;
+  final Color? iconColor;
   final String? label;
   final double? fontSize;
+  final Color? fontColor;
   final VoidCallback? onPressed;
   final VoidCallback? onLongPress;
   final Widget? onEnterWidget;
@@ -618,13 +628,20 @@ class CommandBarDropdown extends CommandBarItem {
   /// The items in the flyout. Must not be empty
   final List<MenuFlyoutItem> items;
 
+  final bool isShowTrailing;
+  final FlyoutPosition? position;
+  final double? verticalOffset;
+  final double? horizontalOffset;
+
   const CommandBarDropdown({
     Key? key,
     required this.items,
     this.icon,
     this.iconSize,
+    this.iconColor,
     this.label,
     this.fontSize,
+    this.fontColor,
     this.onPressed,
     this.onLongPress,
     this.onEnterWidget,
@@ -632,6 +649,10 @@ class CommandBarDropdown extends CommandBarItem {
     this.autofocus = false,
     this.message,
     this.parentFlyoutController,
+    this.isShowTrailing = true,
+    this.verticalOffset,
+    this.horizontalOffset,
+    this.position,
   }) : super(key: key);
 
   @override
@@ -639,6 +660,8 @@ class CommandBarDropdown extends CommandBarItem {
 
     double fontSize = this.fontSize ?? Theme.of(context).textTheme.bodySmall?.fontSize ?? 12;
     double iconSize = this.iconSize ?? (Theme.of(context).textTheme.bodySmall?.fontSize ?? 12) * 1.43;
+    Color fontColor = this.fontColor ?? Theme.of(context).textTheme.bodySmall!.color!;
+    Color iconColor = this.iconColor ?? Theme.of(context).textTheme.bodySmall!.color!;
 
     Widget widget;
     switch (displayMode) {
@@ -653,7 +676,7 @@ class CommandBarDropdown extends CommandBarItem {
             size: iconSize,
             color: (onPressed == null && onLongPress == null && items.isEmpty)
                 ? Theme.of(context).disabledColor
-                : Theme.of(context).textTheme.bodySmall!.color
+                : iconColor
           ),
           title: !showLabel ? null : Text(
             label!,
@@ -661,18 +684,21 @@ class CommandBarDropdown extends CommandBarItem {
               fontSize: fontSize,
               color: (onPressed == null && onLongPress == null && items.isEmpty)
                   ? Theme.of(context).disabledColor
-                  : Theme.of(context).textTheme.bodySmall!.color
+                  : fontColor
             ),
           ),
-          trailing: Icon(
+          trailing: isShowTrailing ? Icon(
               Icons.arrow_drop_down_sharp,
               size: iconSize,
               color: (onPressed == null && onLongPress == null && items.isEmpty)
                   ? Theme.of(context).disabledColor
-                  : Theme.of(context).textTheme.bodySmall!.color
-          ),
+                  : iconColor
+          ) : null,
           items: items,
           placement: FlyoutPlacement.start,
+          position: position ?? FlyoutPosition.below,
+          verticalOffset: verticalOffset ?? 20,
+          horizontalOffset: horizontalOffset ?? 10,
         );
 
         break;
@@ -685,26 +711,26 @@ class CommandBarDropdown extends CommandBarItem {
               size: iconSize,
               color: (onPressed == null && onLongPress == null && items.isEmpty)
                   ? Theme.of(context).disabledColor
-                  : Theme.of(context).textTheme.bodySmall!.color
+                  : iconColor
           ),
-          title: !showLabel ? null :  Expanded(
+          title: !showLabel ? null : Expanded(
             child: Text(
               label!,
               style: TextStyle(
                 fontSize: fontSize,
                 color: (onPressed == null && onLongPress == null && items.isEmpty)
                     ? Theme.of(context).disabledColor
-                    : Theme.of(context).textTheme.bodySmall!.color
+                    : fontColor
               ),
             )
           ),
-          trailing: Icon(
+          trailing: isShowTrailing ? Icon(
               Icons.arrow_right,
               size: iconSize,
               color: (onPressed == null && onLongPress == null && items.isEmpty)
                   ? Theme.of(context).disabledColor
-                  : Theme.of(context).textTheme.bodySmall!.color
-          ),
+                  : iconColor
+          ) : null,
           items: items,
           verticalOffset: 70,
           position: FlyoutPosition.side,

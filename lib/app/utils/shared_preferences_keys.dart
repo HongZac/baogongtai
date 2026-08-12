@@ -69,9 +69,6 @@ abstract class SharedPreferencesKeys{
   ///本地打印时是否显示参数设置 bool
   static const IS_SHOW_PRINT_SETTING_KEY = 'is-show-print-setting-key';
 
-  ///串口通讯服务 接收数据的串口列表 List<Map<String, dynamic>>
-  static const CONNECTLIST_KEY = 'connectlist-key';
-
   ///语音播报音量 double
   static const FLUTTERTTS_VOLUME = 'fluttertts-volume';
   ///语音播报语速 double
@@ -89,6 +86,13 @@ abstract class SharedPreferencesKeys{
 
   ///串口通讯服务 已经注册了的串口通讯服务列表 List<Map<String, dynamic>>
   static const SERIAL_COM_SERVICE_SERIAL_PORT_LIST_KEY = 'serial-com-service-serial-port-list-key';
+  ///串口消息接收配置列表 List<Map<String, dynamic>>
+  static const SERIAL_COM_SERVICE_SERIAL_PORT_MSG_PROCESS_LIST_KEY = 'serial-com-service-serial-port-msg-process-list-key';
+
+  ///TCP 通讯服务 已经注册了的 TCP 通讯服务列表 List<Map<String, dynamic>>
+  static const TCP_SOCKET_SERVICE_TCP_SOCKET_LIST_KEY = 'tcp-socket-service-tcp-socket-list-key';
+  ///TCP 消息接收配置列表 List<Map<String, dynamic>>
+  static const TCP_SOCKET_SERVICE_TCP_SOCKET_MSG_PROCESS_LIST_KEY = 'tcp-socket-service-tcp-socket-msg-process-list-key';
 
   ///dio 网络检查器 消息队列显示 是否启用过滤 bool
   static const DIO_INSPECTOR_IS_FILTER_KEY = 'dio-inspector-is-filter-key';

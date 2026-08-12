@@ -3,11 +3,8 @@ import 'package:basement/picker.dart';
 import 'package:basement/service.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/pickers/adapter_helper.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/check_record_interface/check_record_interface.dart';
 import 'package:desktop/app/utils/app_config.dart';
-import 'package:get/get.dart';
 
 
 ///注塑派工单的次品录入接口 811010
@@ -20,12 +17,6 @@ mixin PMesTaskCheckRecordInterface on CheckRecordInterface {
 
   @override
   List<ChoiceChipModel> get operationWayList => List.unmodifiable(AppConfig.pMesTaskCROperationWayList);
-
-  final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
-  ///称重监听列表
-  late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
-          (element) => true).toList();
-
 
 
   @override

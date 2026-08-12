@@ -26,6 +26,7 @@ abstract class BaseFormController
   final HomeController homeController = Get.find<HomeController>();
   final appService = Get.find<AppService>();
   final dataService = Get.find<DataService>();
+
   ///单据系统对象 xt_objects，用来取系统对象数据（系统对象、查询条件列表、表格列名列表、打印文件、权限项列表、着色器列表），
   final int progId;
   ///编辑界面的对象（通过[objectItem.commandLineMap]获取）

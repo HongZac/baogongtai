@@ -7,8 +7,6 @@ import 'package:basement/utils.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/pickers/adapter_helper.dart';
 import 'package:desktop/app/pickers/picker_view/picker.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_model.dart';
-import 'package:desktop/app/service/weight_msg_connect_service/weight_msg_connect_service.dart';
 import 'package:desktop/app/theme/app_colors.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/mes_submit_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/submit_interface/submit_interface.dart';
@@ -47,11 +45,6 @@ on SubmitInterface, MesSubmitInterface {
   double? opSubmitQty;
   ///当日总报工数量
   double? dayQty;
-
-  final WeightMsgConnectService _weightMsgConnectService = Get.find<WeightMsgConnectService>();
-  ///称重监听列表
-  late final List<WeightMsgConnectModel> connectList = _weightMsgConnectService.connectList.where(
-          (element) => true).toList();
 
   @override
   List<ChoiceChipModel> get operationWayList => List.unmodifiable(AppConfig.mesOrderSubmitOperationWayList);

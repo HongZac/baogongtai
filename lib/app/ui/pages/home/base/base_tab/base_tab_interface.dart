@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 
 ///Tab页面 基础页
-abstract class BaseTabInterface<T extends BaseTabController> implements BaseFormInterface{
+mixin BaseTabInterface<T extends BaseTabController> implements BaseFormInterface{
 
   ///首次进入Tab页面时默认显示的选项卡页面
   final int initialIndex = AppConfig.initialIndex;
