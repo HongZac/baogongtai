@@ -30,6 +30,7 @@ class TcpSocket extends TcpSocketInterface {
   @override
   Future<bool> open() async {
     isOpen = false;
+    errMsg = '';
 
     try {
       sock = await Socket.connect(host, port);

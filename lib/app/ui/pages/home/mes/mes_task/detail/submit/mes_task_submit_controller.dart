@@ -243,20 +243,6 @@ class MesTaskSubmitController
   Future<void> onReady() async{
     await super.onReady();
 
-    connectList.forEach((element) {
-      element.weightMsgConnectService = WeightMsgConnect(connectModel: element, onFire: (data) { ///数据处理
-        if (element.weightMsgConnectService == null){ return; }
-        portMsgOnData(
-          element.key,
-          data: data,
-          isWeightMsgReverseOrder: element.isWeightMsgReverseOrder,
-          accuracy: element.accuracy,
-        );
-        return null;
-      });
-      element.weightMsgConnectService!.onInit();
-    });
-
   }
 
   @override

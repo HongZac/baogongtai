@@ -10,8 +10,6 @@ import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/check_record/mes_t
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/check_record/mes_task_check_record_page.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/material_reject/mes_task_material_reject_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/material_reject/mes_task_material_reject_page.dart';
-import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/scan_code/mes_task_scan_code_controller.dart';
-import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/scan_code/mes_task_scan_code_page.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/submit/mes_task_submit_controller.dart';
 import 'package:desktop/app/ui/pages/home/mes/mes_task/detail/submit/mes_task_submit_page.dart';
 import 'package:desktop/app/ui/pages/home/mes/submit_list/mes_submit_list_controller.dart';
@@ -123,19 +121,6 @@ class MesTaskDetailTabController extends BaseTabController{
           Get.delete<MesCheckRecordListController>(force: true);
         }
     ),
-    // TabPageControllerModel( ///报工扫码页
-    //     put: (){
-    //       Get.put<MesTaskScanCodeController>(MesTaskScanCodeController(
-    //         taskModel: MoTaskModel.fromJson(taskModel.toJson()),
-    //         taskOpenType: taskOpenType,
-    //         showAppBar: false,
-    //         deviceId: taskOpenType == 1 ? key : '',
-    //       ));
-    //     },
-    //     delete: (){
-    //       Get.delete<MesTaskScanCodeController>(force: true);
-    //     }
-    // ),
   ];
 
   @override
@@ -159,7 +144,6 @@ class MesTaskDetailTabController extends BaseTabController{
     MesTaskCheckRecordPage(),
     MesTaskMaterialRejectPage(),
     MesCheckRecordListPage(),
-    // MesTaskScanCodePage(),
   ];
 
 
