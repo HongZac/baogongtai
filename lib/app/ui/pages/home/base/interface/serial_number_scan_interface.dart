@@ -29,7 +29,7 @@ on BaseFormController,
   }) async {
     await Future.doWhile(() async {
       if (_isLoading || isLoading){ ///isLoading 等待报工结束
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 1000));
         return true;
       }
       return false;

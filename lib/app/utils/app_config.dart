@@ -2533,7 +2533,7 @@ abstract class AppConfig {
     ChoiceChipModel(keyName: dSWeight, title: '电子秤（报工总重）'),
     ChoiceChipModel(keyName: scanGun, title: '扫码枪'),
     ChoiceChipModel(keyName: cardReader, title: '读卡器'),
-    ChoiceChipModel(keyName: serialNumberScan, title: '序列号'),
+    ChoiceChipModel(keyName: serialNumberScan, title: '序列号（报工）'),
   ];
 
 }
