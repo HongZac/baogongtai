@@ -147,6 +147,9 @@ class MineGetDelegate extends GetDelegate {
   ///
   ///在 Get.toNamed、Route.didPush 前使用（通过 Get.toNamed 进入历史路由时，需要再执行一次 afterPop）
   Future<void> beforePush() async {
+    if (!DialogUtils.isCustomDialogOpen){
+      return;
+    }
     writeLog('Observer beforePush');
     Widget? pageWidget;
     if (Get.rootDelegate.history.isNotEmpty){

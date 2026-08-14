@@ -20,7 +20,7 @@ class SerialPort extends SerialPortInterface {
   lib_serial_port.SerialPortReader? _reader;
   StreamSubscription<Uint8List>? _subscription;
 
-  final int _minDataDelayTime = 1000;
+  final int _minDataDelayTime = 700;
 
   SerialPort(super.portName, {super.parserName, super.config});
 

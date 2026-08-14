@@ -51,7 +51,7 @@ on BaseFormController,
       return;
     }
 
-    ///判断装箱情况
+   /* ///判断装箱情况
     if (submitType == AppConfig.singleBoxSerialNumberSubmit){
       String singleBoxQtyString = NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '';
       int? singleBoxQty = int.tryParse(singleBoxQtyString);
@@ -81,7 +81,7 @@ on BaseFormController,
         _isLoading = false;
         return;
       }
-    }
+    } */
 
     String string; ///解析后的生产序列号条码
     if (searchString.substring(0, 1) != '|') {

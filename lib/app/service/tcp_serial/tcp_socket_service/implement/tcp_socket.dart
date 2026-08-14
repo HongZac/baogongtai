@@ -17,7 +17,7 @@ class TcpSocket extends TcpSocketInterface {
 
   StreamSubscription<Uint8List>? listen;
 
-  final int _minDataDelayTime = 1000;
+  final int _minDataDelayTime = 700;
 
 
   TcpSocket({
