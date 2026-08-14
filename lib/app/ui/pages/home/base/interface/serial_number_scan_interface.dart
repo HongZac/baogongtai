@@ -250,7 +250,8 @@ on BaseFormController,
       List<MoOrderSNModel> list = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
       list.add(orderSNModel ?? MoOrderSNModel(id: string, code: string));
       await orderSNAdapter?.validViewValue(list);
-      orderSNOnChanged(list);
+      submitSNOnChanged(list);
+
       if (singleBoxSerialNumberSubmitAutoCommit){
         ///数量符合，可以执行自动提交
         ///报工提交前检查，未通过则退出
