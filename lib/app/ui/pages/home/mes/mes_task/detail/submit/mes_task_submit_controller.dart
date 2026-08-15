@@ -712,11 +712,11 @@ class MesTaskSubmitController
             isWeightError = _pieceWeight != 0
                 && ((inventoryModel.invWeight ?? 0) / _pieceWeight - 1).abs() > (limitWeightDeviationValue / 100);
             break;
-            case NumPadUtil.singleBoxQty:
-              int _singleBoxQty = int.tryParse(NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '') ?? 0;
-              String _qtyString = _singleBoxQty > 0 ? _singleBoxQty.toString() : '';
-              NumPadUtil().setText(NumPadUtil.qty, _qtyString, numPadCTList);
-              break;
+            // case NumPadUtil.singleBoxQty:
+            //   int _singleBoxQty = int.tryParse(NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '') ?? 0;
+            //   String _qtyString = _singleBoxQty > 0 ? _singleBoxQty.toString() : '';
+            //   NumPadUtil().setText(NumPadUtil.qty, _qtyString, numPadCTList);
+            //   break;
         }
       }
 
@@ -1538,8 +1538,8 @@ class MesTaskSubmitController
       }
 
       String serialNumber = '';
-      String code = snCodeStr;
-      List<String> codeList = code.split(',');
+      // String code = snCodeStr;
+      List<String> codeList = snCodeStr.split(',');
 
       if(codeList.length >= singleBoxQty ) {
         List<String> firstList = codeList.take(singleBoxQty).toList();

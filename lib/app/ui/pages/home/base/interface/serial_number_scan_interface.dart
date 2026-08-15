@@ -220,6 +220,7 @@ on BaseFormController,
         }
         await orderSNAdapter?.validViewValue([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
         orderSNOnChanged([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
+
         if (autoCommitSubmit){
           ///此时所有报工数据都已填写完成，符合自动报工的条件，直接提交报工记录
           update();

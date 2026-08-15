@@ -1472,7 +1472,13 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
     }
 
     String qtyString = NumPadUtil().getText(NumPadUtil.qty, numPadCTList) ?? '';
-    int? qty = int.tryParse(qtyString);
+    int? qty;
+    if (submitType == AppConfig.singleBoxSerialNumberSubmit){
+      qty = singleBoxQty;
+    }else {
+      qty = int.tryParse(qtyString);
+    }
+
     if (needCheckQty){
       if (submitType != AppConfig.mesWeightSubmit && submitType != AppConfig.mesWeightBoxSubmit){
         if ((FormUtil.isRequired(formJudgeTypeMap['Qty']) && qty == null)
@@ -1493,14 +1499,14 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
       // }
     }
 
-    if (submitType == AppConfig.singleBoxSerialNumberSubmit){
-      if (singleBoxQty == null || singleBoxQty < 1){
-        return {false: '请输入单箱数量！'};
-      }
-      if (singleBoxQty != qty){
-        return {false: '单箱数量和报工总数不相等，请检查！'};
-      }
-    }
+    // if (submitType == AppConfig.singleBoxSerialNumberSubmit){
+    //   if (singleBoxQty == null || singleBoxQty < 1){
+    //     return {false: '请输入单箱数量！'};
+    //   }
+    //   if (singleBoxQty != qty){
+    //     return {false: '单箱数量和报工总数不相等，请检查！'};
+    //   }
+    // }
 
     String _weightString = NumPadUtil().getText(NumPadUtil.weight, numPadCTList) ?? '';
     double? _weight = double.tryParse(_weightString);
@@ -1977,7 +1983,7 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
     else if (submitType == AppConfig.singleBoxSerialNumberSubmit){
       submitModel.boxQty = singleBoxQty;
       submitModel.num = 1;
-      submitModel.qty = qty;
+      submitModel.qty = singleBoxQty;
       submitModel.weight = weight;
     }
 
