@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:basement/utils.dart';
 import 'package:desktop/app/service/tcp_serial/serial_com_service/interface/serial_port_interface.dart';
 import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
 import 'package:desktop/app/utils/toast_notification.dart';
@@ -10,15 +9,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:flutter_libserialport/flutter_libserialport.dart'
-    if (dart.library.io) 'package:flutter_libserialport/flutter_libserialport.dart'
-    as lib_serial_port;
+if (dart.library.io) 'package:flutter_libserialport/flutter_libserialport.dart'
+as lib_serial_port;
 import 'package:usb_serial/usb_serial.dart';
 
 
 class SerialPort extends SerialPortInterface {
   lib_serial_port.SerialPort? _serialPort;
-  lib_serial_port.SerialPortReader? _reader;
-  StreamSubscription<Uint8List>? _subscription;
+  //lib_serial_port.SerialPortReader? _reader;
+  //StreamSubscription<Uint8List>? _subscription;
+  ///使用 Timer 代替 [_reader]、[_subscription]，
+  ///因为 0.6.0 版本的 _reader?.stream.listen 会导致 CPU 占用率过高
+  Timer? _timer;
 
   final int _minDataDelayTime = 700;
 
@@ -56,6 +58,48 @@ class SerialPort extends SerialPortInterface {
     _serialPort!.config = config;
     config.dispose();
 
+    _timer = Timer.periodic(Duration(milliseconds: _minDataDelayTime), (timer) async {
+      if (!(_serialPort?.isOpen ?? false)){
+        ///串口已关闭
+        errMsg = '串口$portName关闭！';
+        eventBus.fire(SerialPortDataModel(
+          com: portName,
+          data: jsonEncode({'-1': errMsg}),
+          isConnectMsg: true,
+        ));
+
+        if (_timer != null){
+          _timer!.cancel();
+        }
+
+        try {
+          _serialPort?.flush();
+          _serialPort?.close();
+          _serialPort = null;
+        } catch(e){}
+
+        isOpen = false;
+        return;
+      }
+
+      Uint8List data = _serialPort!.read(1024);
+      errMsg = '';
+      theLastDataList.clear();
+      theLastDataList.addAll(data);
+      eventBus.fire(SerialPortDataModel(
+        com: portName,
+        data: jsonEncode({'-2': theLastDataList}),
+        isConnectMsg: true,
+      ));
+      var parsedData = await parser.parse(data.toList());
+      if (parsedData != null && parsedData.isNotEmpty) {
+        eventBus.fire(SerialPortDataModel(
+          com: portName,
+          data: parsedData,
+        ));
+      }
+    });
+    /*
     ///读串口数据
     _reader = lib_serial_port.SerialPortReader(_serialPort!, timeout: 300);
     _subscription = _reader?.stream.listen((data) async {
@@ -100,6 +144,7 @@ class SerialPort extends SerialPortInterface {
         isConnectMsg: true,
       ));
     });
+    */
 
     isOpen = true;
     return true;
@@ -108,13 +153,16 @@ class SerialPort extends SerialPortInterface {
   @override
   Future<bool> close() async {
     ///停止读串口
-    if (_subscription != null) {
-      _subscription!.cancel();
-      _subscription = null;
-    }
-    if (_reader != null) {
-      _reader!.close();
-      _reader = null;
+    //if (_subscription != null) {
+    //  _subscription!.cancel();
+    //  _subscription = null;
+    //}
+    //if (_reader != null) {
+    //  _reader!.close();
+    //  _reader = null;
+    //}
+    if (_timer != null){
+      _timer!.cancel();
     }
     if (_serialPort?.isOpen ?? false) {
       _serialPort!.flush();
