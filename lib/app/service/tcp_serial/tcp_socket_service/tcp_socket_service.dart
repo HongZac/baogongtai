@@ -96,9 +96,8 @@ class TcpSocketService extends GetxService {
   }) async {
     BaseTcpSocket? item = tcpSocketList.firstWhereOrNull((element) => element.host == host && element.port == port);
     if (item != null){
-      if (item.isOpen) {
-        await item.close();
-      }
+      /// 无条件关闭：即使处于等待重连状态（isOpen 为 false），也必须停止后台重连任务并清理资源
+      await item.close();
       tcpSocketList.removeWhere((element) => element.host == item.host && element.port == item.port);
 
       ///保存至本地配置文件中
@@ -110,7 +109,7 @@ class TcpSocketService extends GetxService {
 
   @override
   void onClose() {
-    ///将所有打开的 TCP 关闭
+    ///将所有 TCP 关闭（包括等待重连的实例），先同步取消重试意图和 Timer
     for (var element in tcpSocketList) {
       element.close();
     }

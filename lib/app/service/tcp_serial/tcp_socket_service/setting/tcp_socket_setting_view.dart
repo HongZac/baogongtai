@@ -1,6 +1,7 @@
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/service/tcp_serial/parser/tcp_serial_parser_enum.dart';
 import 'package:desktop/app/service/tcp_serial/tcp_socket_service/base_tcp_socket.dart';
+import 'package:desktop/app/service/tcp_serial/tcp_socket_service/interface/tcp_socket_interface.dart';
 import 'package:desktop/app/service/tcp_serial/tcp_socket_service/model/tcp_socket_msg_process_model.dart';
 import 'package:desktop/app/service/tcp_serial/tcp_socket_service/setting/tcp_socket_setting_controller.dart';
 import 'package:desktop/app/ui/widget/dialog/interface/base_dialog_page.dart';
@@ -110,6 +111,11 @@ class TcpSocketSettingView extends BaseDialogPage<TcpSocketSettingController> {
                                         content: TcpSerialParserEnum.values[item.parserName?.index ?? 0].name,
                                       ),
                                       const SizedBox(width: 4,),
+                                      subContentItem( ///实际连接状态
+                                        context,
+                                        content: _connectStatusText(item),
+                                      ),
+                                      const SizedBox(width: 4,),
                                       subContentItem(
                                         context,
                                         content: item.autoOpen
@@ -141,7 +147,8 @@ class TcpSocketSettingView extends BaseDialogPage<TcpSocketSettingController> {
                                     ),
                                     const SizedBox(width: 48,),
                                     Switch(
-                                      value: item.isOpen,
+                                      /// 开关表示“保持连接”，等待重连时仍为开启状态，用户可随时关闭
+                                      value: item.keepConnected,
                                       onChanged: (bool? bool) async {
                                         await controller.tcpSocketOpenOnChanged(item);
                                       },
@@ -250,6 +257,15 @@ class TcpSocketSettingView extends BaseDialogPage<TcpSocketSettingController> {
           }
       ),
     );
+  }
+
+  /// 根据连接状态生成展示文本，等待重连时附带已失败次数
+  String _connectStatusText(BaseTcpSocket item) {
+    if (item.connectStatus == TcpSocketConnectStatus.waitingReconnect
+        && item.reconnectFailCount > 0) {
+      return '${item.connectStatus.text}（已失败${item.reconnectFailCount}次）';
+    }
+    return item.connectStatus.text;
   }
 
   Widget subContentItem(BuildContext context, {

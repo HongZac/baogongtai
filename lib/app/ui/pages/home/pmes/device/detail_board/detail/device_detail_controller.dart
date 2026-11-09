@@ -1040,7 +1040,7 @@ class DeviceDetailController
         });
         String jsonStr = json.encode(
           mapList,
-          toEncodable: DioService().datetimeEncode
+          toEncodable: DioService.datetimeEncode
         );
         Printer? printer = Printer(url: printerUrl, name: printerName);
         bool isPrintFinished = false;
@@ -1111,7 +1111,7 @@ class DeviceDetailController
         ProgressDialogUtil.showProgressDialog(max: 1, msg: '正在打印装箱单', completedMsg: '打印完成！');
         String url = AddressService.getUrl(barcodeRes.data);
         Printer? printer = Printer(url: printerUrl, name: printerName);
-        Uint8List printContent = await DioService().downLoadFile(url);
+        Uint8List printContent = await DioService.downLoadFile(url);
         if (printContent.isEmpty){
           ToastNotification(Get.overlayContext!).error('打印失败！');
           ProgressDialogUtil.close();
@@ -1160,7 +1160,7 @@ class DeviceDetailController
           return;
         }
         ProgressDialogUtil.showProgressDialog(max: 1, msg: '正在打印装箱单', completedMsg: '打印完成，共${listRes.data.length}份！');
-        var base64Str = base64.encode(utf8.encode(json.encode(listRes.data.map((e) => e.toJson()).toList(), toEncodable: DioService().datetimeEncode)));
+        var base64Str = base64.encode(utf8.encode(json.encode(listRes.data.map((e) => e.toJson()).toList(), toEncodable: DioService.datetimeEncode)));
         ///写入文档
         File _testFile = File(ShareStorageUtil.printDirectory!.path +
             '\\${DateTime.now().year}${DateTime.now().month}${DateTime.now().day}${DateTime.now().hour}${DateTime.now().minute}${DateTime.now().second}.txt');

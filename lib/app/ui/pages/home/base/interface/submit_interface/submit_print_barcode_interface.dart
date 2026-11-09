@@ -253,7 +253,7 @@ on InvClassFrxNameInterface,
         });
         String jsonStr = json.encode(
             mapList,
-            toEncodable: DioService().datetimeEncode
+            toEncodable: DioService.datetimeEncode
         );
         Printer? printer = Printer(url: printerUrl, name: printerName);
         bool isPrintFinished = false;
@@ -321,7 +321,7 @@ on InvClassFrxNameInterface,
           }
           String url = AddressService.getUrl(barcodeRes.data);
           Printer? printer = Printer(url: printerUrl, name: printerName);
-          Uint8List printContent = await DioService().downLoadFile(url);
+          Uint8List printContent = await DioService.downLoadFile(url);
           if (printContent.isEmpty){
             return {false: '打印失败！'};
           }
@@ -350,7 +350,7 @@ on InvClassFrxNameInterface,
         if(!(await File(executable).exists())){
           return {false: '没有发现本地打印主程序nberp.Desktop.Service.Print.exe！'};
         }
-        var base64Str = base64.encode(utf8.encode(json.encode(barcodeMainList.map((e) => e.toJson()).toList(), toEncodable: DioService().datetimeEncode)));
+        var base64Str = base64.encode(utf8.encode(json.encode(barcodeMainList.map((e) => e.toJson()).toList(), toEncodable: DioService.datetimeEncode)));
         ///写入文档
         File testFile = File('${ShareStorageUtil.printDirectory!.path}\\${DateTime.now().year}${DateTime.now().month}${DateTime.now().day}${DateTime.now().hour}${DateTime.now().minute}${DateTime.now().second}.txt');
         await testFile.writeAsString(base64Str);

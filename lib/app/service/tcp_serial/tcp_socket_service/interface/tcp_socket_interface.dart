@@ -8,6 +8,39 @@ import 'package:desktop/app/service/tcp_serial/parser/wireless_micro_meter_parse
 import 'package:get/get.dart';
 
 
+///TCP 连接状态
+enum TcpSocketConnectStatus {
+  ///已关闭
+  closed,
+
+  ///连接中……
+  connecting,
+
+  ///已连接
+  connected,
+
+  ///等待重连
+  waitingReconnect,
+}
+
+
+///TCP 连接状态展示文本
+extension TcpSocketConnectStatusText on TcpSocketConnectStatus {
+  String get text {
+    switch (this) {
+      case TcpSocketConnectStatus.closed:
+        return '已关闭';
+      case TcpSocketConnectStatus.connecting:
+        return '连接中';
+      case TcpSocketConnectStatus.connected:
+        return '已连接';
+      case TcpSocketConnectStatus.waitingReconnect:
+        return '等待重连';
+    }
+  }
+}
+
+
 ///TCP客户端套接字（Socket）通讯的应用接口
 abstract class TcpSocketInterface {
 
@@ -21,8 +54,20 @@ abstract class TcpSocketInterface {
   ///串口/网络数据转换器（实际的 Socket 数据处理程序）
   late final TcpSerialParserInterface parser;
 
-  ///Socket 是否已经打开
+  ///Socket 是否已经打开（表示当前是否实际连接成功）
   bool isOpen = false;
+
+  ///是否保持连接（主动打开后为 true，主动关闭后为 false；断线期间仍为 true，等待自动重连）
+  bool keepConnected = false;
+
+  ///当前连接状态
+  TcpSocketConnectStatus connectStatus = TcpSocketConnectStatus.closed;
+
+  ///连续重连失败次数（用于设置页显示及退避计算）
+  int reconnectFailCount = 0;
+
+  ///下次重连的时间（用于设置页显示，未安排重连时为 null）
+  DateTime? nextReconnectTime;
 
   ///该 Socket 最后一次接收到的数据
   final List<int> theLastDataList = [];

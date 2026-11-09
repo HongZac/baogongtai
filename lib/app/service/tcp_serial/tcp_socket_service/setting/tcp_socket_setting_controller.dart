@@ -37,8 +37,14 @@ class TcpSocketSettingController extends BaseDialogController {
     ///接收 TCP 数组
     subscription = appService.eventBus.on<TcpSocketDataModel>().listen((event) async {
       if (event.isConnectMsg) {
+        /// 连接状态事件：仅刷新界面，无需解析数据
+        if (event.connectStatus != null) {
+          update();
+          return;
+        }
         Map<String, dynamic> dataMap = jsonDecode(event.data);
         if (dataMap.containsKey('-1')){
+          /// 错误提示：Socket 层仅在首次失败时发送该事件，避免重复弹窗
           ToastNotification(Get.overlayContext!).error(dataMap['-1'].toString());
           update();
         }
@@ -105,19 +111,22 @@ class TcpSocketSettingController extends BaseDialogController {
     update();
   }
 
-  ///打开/关闭 TCP
+  ///打开/关闭 TCP（开关表示“保持连接”，等待重连时仍处于开启状态）
   Future<void> tcpSocketOpenOnChanged(BaseTcpSocket item) async {
-    if (item.isOpen){
+    if (item.keepConnected){
+      /// 关闭：停止自动重连并清理资源
       bool res = await item.close();
       if (res){
         ToastNotification(Get.overlayContext!).success("TCP 关闭成功！");
       }
     }
     else {
+      /// 打开：启用保持连接，立即连接；失败后后台自动重试
       bool res = await item.open();
       if (res){
         ToastNotification(Get.overlayContext!).success("TCP 打开成功！");
       }
+      /// 若首次连接失败，Socket 层会发送错误事件提示“连接失败，将自动重试”
     }
     update();
   }

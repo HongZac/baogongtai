@@ -35,8 +35,16 @@ class BaseTcpSocket extends ICloneable {
   int get port => _tcpSocket.port;
   ///TCP 数据处理解析类
   TcpSerialParserEnum? get parserName => _tcpSocket.parserName;
-  ///当前 TCP 通讯是否打开
+  ///当前 TCP 通讯是否打开（实际连接成功）
   bool get isOpen => _tcpSocket.isOpen;
+  ///是否保持连接（主动打开后为 true，断线期间仍为 true 等待自动重连）
+  bool get keepConnected => _tcpSocket.keepConnected;
+  ///当前连接状态
+  TcpSocketConnectStatus get connectStatus => _tcpSocket.connectStatus;
+  ///连续重连失败次数
+  int get reconnectFailCount => _tcpSocket.reconnectFailCount;
+  ///下次重连的时间
+  DateTime? get nextReconnectTime => _tcpSocket.nextReconnectTime;
   ///该 TCP 口最后一次接收到的数据
   List<int> get theLastDataList => _tcpSocket.theLastDataList;
   ///TCP 连接的错误信息

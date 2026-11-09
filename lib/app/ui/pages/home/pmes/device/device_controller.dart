@@ -244,7 +244,7 @@ class DeviceController
             && res.data.initialPreviewConfig!.isNotEmpty && res.data.initialPreviewConfig![0].type == 'pdf'){
           String url = res.data.initialPreview?.asMap()[0] ?? '';
           if (url.isNotEmpty){
-            Uint8List uint8listForAllPage = await DioService().downLoadFile(AddressService.getUrl(url));
+            Uint8List uint8listForAllPage = await DioService.downLoadFile(AddressService.getUrl(url));
             if (uint8listForAllPage.isNotEmpty){
               var list = Printing.raster(uint8listForAllPage, pages: [0], dpi: 72);
               var firstPage = await list.first;
@@ -662,7 +662,7 @@ class DeviceController
                   && pres.data.initialPreviewConfig!.isNotEmpty && pres.data.initialPreviewConfig![0].type == 'pdf'){
                 String url = pres.data.initialPreview?.asMap()[0] ?? '';
                 if (url.isNotEmpty){
-                  Uint8List uint8listForAllPage = await DioService().downLoadFile(AddressService.getUrl(url));
+                  Uint8List uint8listForAllPage = await DioService.downLoadFile(AddressService.getUrl(url));
                   if (uint8listForAllPage.isNotEmpty){
                     var list = Printing.raster(uint8listForAllPage, pages: [0], dpi: 72);
                     var firstPage = await list.first;

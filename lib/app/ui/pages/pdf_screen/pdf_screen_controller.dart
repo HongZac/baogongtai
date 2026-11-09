@@ -43,7 +43,7 @@ class PdfScreenController
   Future<void> onReady() async {
     super.onReady();
     ProgressDialogUtil.showProgressDialog();
-    pdfUint8List = await DioService().downLoadFile(pdfUrl);
+    pdfUint8List = await DioService.downLoadFile(pdfUrl);
     if (pdfUint8List.isEmpty){
       isPDFLoadFailed = true;
     }

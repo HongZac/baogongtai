@@ -190,7 +190,7 @@ class AttachUtils {
       keyName: key,
       imageUint8List: Uint8List(0),
     );
-    Uint8List uint8listForAllPage = await DioService().downLoadFile(AddressService.getUrl(url));
+    Uint8List uint8listForAllPage = await DioService.downLoadFile(AddressService.getUrl(url));
     if (uint8listForAllPage.isNotEmpty){
       var list = Printing.raster(uint8listForAllPage, pages: [0], dpi: 72);
       var firstPage = await list.first;
