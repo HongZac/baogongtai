@@ -116,6 +116,7 @@ abstract class AppConfig {
     ChoiceChipModel(title: '产品名称搜索', keyName: 'invName', content: 'invName',),
     ChoiceChipModel(title: '产品规格搜索', keyName: 'invStd', content: 'productstd',),
     ChoiceChipModel(title: '序列号搜索', keyName: 'orderSN', content: 'MoOrderSN',), /// MoOrderSN MoOrderId
+    ChoiceChipModel(title: '需求跟踪号搜索', keyName: 'mtoNo', content: 'mtono',),
   ];
 
   ///派工单搜索方式列表
@@ -162,7 +163,7 @@ abstract class AppConfig {
     ChoiceChipModel(title: '产品编码搜索', keyName: 'invCode', content: 'invcode'),
     ChoiceChipModel(title: '产品名称搜索', keyName: 'invName', content: 'invname'),
     ChoiceChipModel(title: '产品规格搜索', keyName: 'invStd', content: 'invstd'),
-    ChoiceChipModel(title: '产品图号搜索', keyName: 'engineerFigNo', content: 'engineerfigno'),
+    ChoiceChipModel(title: '产品图号搜索', keyName: 'engineerFigNo', content: 'engineerfigno'), ///engineerfigno 模糊；EngineerFigNo 精确
     ChoiceChipModel(title: '存货代码搜索', keyName: 'invAddCode', content: 'InvAddCode'),
   ];
 
@@ -1401,6 +1402,8 @@ abstract class AppConfig {
   static const String toTask = 'toTask';
   ///超产处理
   static const String setOverQty = 'setOverQty';
+  ///转单
+  static const String transferOrder = 'transferOrder';
 
   ///生产任务单列表页面显示的按钮组
   static List<CommandBarBtnModel> mesOrderCommandBarList = [
@@ -1498,6 +1501,14 @@ abstract class AppConfig {
       commandBarBtnType: CommandBarBtnType.filled,
       isShow: true,
       btnPermissionKeyName: 'btnshifttask',
+    ),
+    CommandBarBtnModel(
+      title: '\u00A0\u00A0\u00A0\u00A0转单\u00A0\u00A0\u00A0\u00A0',
+      keyName: '$mesTaskBtn-$transferOrder',
+      bkgdColorValue: 'primaryContainer',
+      commandBarBtnType: CommandBarBtnType.filled,
+      isShow: true,
+      btnPermissionKeyName: 'btnswit',
     ),
     CommandBarBtnModel(
       title: '\u00A0\u00A0\u00A0\u00A0挂起\u00A0\u00A0\u00A0\u00A0',
@@ -1735,6 +1746,15 @@ abstract class AppConfig {
   ///设备概览-设备详情页面 派工单列表区域显示的按钮组列表
   static List<CommandBarBtnModel> pMesDeviceTaskListCommandBarList = [
     CommandBarBtnModel(
+      title: '转单',
+      icon: Icons.compare_arrows,
+      keyName: '$pMesDeviceDetailBtn-$transferOrder',
+      bkgdColorValue: '',
+      commandBarBtnType: CommandBarBtnType.commandBar,
+      isShow: true,
+      btnPermissionKeyName: 'btnswit',
+    ),
+    CommandBarBtnModel(
       title: '切单',
       icon: Icons.change_history,
       keyName: '$pMesDeviceDetailBtn-$shiftTask',
@@ -1929,6 +1949,7 @@ abstract class AppConfig {
     NumPadUtil.qty: '报工总数',
     NumPadUtil.weight: '报工总重',
     NumPadUtil.boxWeight: '箱重',
+    NumPadUtil.workHours: '报工工时',
   };
   static Map<String, Map<String, dynamic>> pMesSubmitFormStyleMap = {
     NumPadUtil.singleBoxQty: { ///单箱数量
@@ -1985,6 +2006,7 @@ abstract class AppConfig {
     NumPadUtil.qty: '报工总数',
     NumPadUtil.weight: '报工总重',
     NumPadUtil.boxWeight: '箱重',
+    NumPadUtil.workHours: '报工工时',
   };
   static Map<String, Map<String, dynamic>> mesOrderSubmitFormStyleMap = {};
 
@@ -2038,6 +2060,7 @@ abstract class AppConfig {
     NumPadUtil.qty: '报工总数',
     NumPadUtil.weight: '报工总重',
     NumPadUtil.boxWeight: '箱重',
+    NumPadUtil.workHours: '报工工时',
   };
   static Map<String, Map<String, dynamic>> mesTaskSubmitFormStyleMap = {};
 
@@ -2535,6 +2558,9 @@ abstract class AppConfig {
     ChoiceChipModel(keyName: cardReader, title: '读卡器'),
     ChoiceChipModel(keyName: serialNumberScan, title: '序列号（报工）'),
   ];
+
+  ///查询后如果只有一条数据，是否自动进入详情页面
+  static const bool isEnterDetailAfterSearch = true;
 
 }
 

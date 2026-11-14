@@ -157,7 +157,7 @@ class InvBarcodeController
   void searchQueryDataOnChanged() {
     dataListPageConfig.queryData!.removeWhere((key, value) => inventorySearchQueryDataList.contains(key));
     if (searchTC.text.isNotEmpty){
-      String keyWord = inventorySearchTypeList[inventorySearchTypeIndex].content;
+      String keyWord = searchTypeList[inventorySearchTypeIndex].content;
       dataListPageConfig.queryData![keyWord] = searchTC.text;
     }
   }
@@ -262,6 +262,12 @@ class InvBarcodeController
           scanQueryDataOnChanged(keyWord: 'InvID', keyValue: list[4]);
           res = await pageChanged(showLoading: false);
         }
+        else {
+          ToastNotification(Get.overlayContext!).warn('条码错误！');
+          isLoading = false;
+          ProgressDialogUtil.close();
+          return;
+        }
         break;
       default:
         ToastNotification(Get.overlayContext!).warn('条码错误！');
@@ -284,6 +290,7 @@ class InvBarcodeController
   void scanQueryDataOnChanged({String? keyWord, String? keyValue}) {
     dataListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
+      ///如果是扫码查询的话，todo
       dataListPageConfig.queryData![keyWord] = keyValue;
     }
   }

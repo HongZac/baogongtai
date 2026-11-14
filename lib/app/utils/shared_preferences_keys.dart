@@ -450,6 +450,8 @@ abstract class SharedPreferencesKeys{
   static const MES_WORK_CENTER_TASK_SEARCH_TYPE_INDEX_KEY = 'mes-work-center-task-search-type-index-key';
   ///加工中心报工 主页面 单据列表的单页显示记录数 int
   static const MES_WORK_CENTER_PAGE_CONFIG_ROWS_KEY = 'mes-work-center-page-config-rows-key';
+  ///加工中心报工 主页面 查询后如果只有一条数据，是否自动进入详情页面 bool
+  static const MES_WORK_CENTER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY = 'mes-work-center-is-enter-detail-after-search-key';
 
   ///加工中心报工 加工中心详情页 派工单加工中心详情页选项卡 (0生产报工；1报工列表；2次品录入；3次品列表) int
   static const MES_WORK_CENTER_TASK_DETAIL_INITIAL_INDEX_KEY = 'mes-work-center-task-detail-initial-index-key';
@@ -485,6 +487,8 @@ abstract class SharedPreferencesKeys{
   static const MES_ORDER_COMMAND_BAR_LIST_KEY = 'mes-order-command-bar-list-key';
   ///生产任务单 主页面 任务单列表的单页显示记录数 int
   static const MES_ORDER_PAGE_CONFIG_ROWS_KEY = 'mes-order-page-config-rows-key';
+  ///生产任务单 主页面 查询后如果只有一条数据，是否自动进入详情页面 bool
+  static const MES_ORDER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY = 'mes-order-is-enter-detail-after-search-key';
 
   ///生产任务单 任务单详情Tab页 默认显示的选项卡 int
   static const MES_ORDER_DETAIL_INITIAL_INDEX_KEY = 'mes-order-detail-initial-index-key';
@@ -741,13 +745,12 @@ abstract class SharedPreferencesKeys{
   static const MES_TASK_COMMAND_BAR_LIST_KEY = 'mes-task-command-bar-list-key';
   ///生产派工单 主页面 派工单列表的单页显示记录数 int
   static const MES_TASK_PAGE_CONFIG_ROWS_KEY = 'mes-task-page-config-rows-key';
+  ///生产派工单 主页面 查询后如果只有一条数据，是否自动进入详情页面 bool
+  static const MES_TASK_IS_ENTER_DETAIL_AFTER_SEARCH_KEY = 'mes-task-is-enter-detail-after-search-key';
 
   ///生产派工单 派工单详情Tab页 默认显示的选项卡 int
   static const MES_TASK_DETAIL_INITIAL_INDEX_KEY = 'mes-task-detail-initial-index-key';
 
-
-  ///生产派工单 报工序列号存储 String
-  static const MES_TASK_SUBMIT_OP_SCAN_CODE_KEY = 'mes-task-submit-op-scan-code-key';
   ///生产派工单 报工 序列号校验码 String
   static const MES_TASK_SUBMIT_ASSIGNMENT_SERIAL_NUMBER_CHECK_CODE_KEY = 'mes-task-submit-assignment-serial-number-check-code-key';
   ///生产派工单 报工 报工页面显示的数据字段列表 List<Map<String, dynamic>>
@@ -1199,6 +1202,11 @@ abstract class SharedPreferencesKeys{
   static const INV_BARCODE_LIST_DELETE_LIMIT_TIME_KEY = 'inv-barcode-list-delete-limit-time-key';
   ///物料条码 条码列表 搜索方式 int
   static const INV_BARCODE_LIST_SEARCH_TYPE_INDEX_KEY = 'inv-barcode-list-search-type-index-key';
+  //endregion
+
+  //region 产品图纸
+  ///产品图纸 搜索按钮列表选中的项 int
+  static const INVENTORY_ATTACH_SEARCH_BTN_TYPE_INDEX_KEY = 'inventory-attach-search-btn-type-index-key';
   //endregion
 
 }

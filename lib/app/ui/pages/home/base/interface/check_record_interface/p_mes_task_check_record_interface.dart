@@ -124,8 +124,9 @@ mixin PMesTaskCheckRecordInterface on CheckRecordInterface {
       checkRecordModel.productDate = DateTime.now();
       checkRecordModel.depId = getDepIdByDepGetWayIndex();
       checkRecordModel.depCode = getDepCodeByDepGetWayIndex();
-      checkRecordModel.empId = taskModel.emploeeId;
-      checkRecordModel.emploee = taskModel.personName;
+      ///数据初始化时，先不写入员工数据
+      //checkRecordModel.empId = taskModel.emploeeId;
+      //checkRecordModel.emploee = taskModel.personName;
       checkRecordModel.wcId = taskModel.wcId;
       //region getAdapter
       ///获取员工选单数据源可能需要用到 lineCode，该值是通过产线数据源获取的
@@ -208,6 +209,7 @@ mixin PMesTaskCheckRecordInterface on CheckRecordInterface {
           await getPersonAdapter();
         }
       }
+      ///如果切换派工单，判断当前填写的员工数据是否为空，是，则需要填写派工单对应的员工数据
       if ((checkRecordModel.empId ?? '').isEmpty){
         checkRecordModel.empId = taskModel.emploeeId;
         checkRecordModel.emploee = taskModel.personName;
@@ -255,6 +257,22 @@ mixin PMesTaskCheckRecordInterface on CheckRecordInterface {
     required String? invCCode,
     String button,
   }) get checkRecordCheck => _checkRecordCheck;
+
+  ///次品记录提交成功后，刷新数据填报区域的数据
+  Future<void> _resetCheckRecordDataAfterSave() async {
+    await super.resetCheckRecordDataAfterSave();
+    ///报次品完成后，如果不需要写入历史选中的员工数据，且当前派工单没有对应员工数据，且当前登录账号没有对应员工数据，则清空员工数据
+    if (!isSaveTheLastSelectedPsnId
+        && (taskModel.emploeeId == null || taskModel.emploeeId!.isEmpty)
+        && (BaseService.profile.objId == null || BaseService.profile.objId!.isEmpty)){
+      checkRecordModel.empId = null;
+      checkRecordModel.emploee = null;
+      personAdapter?.clearSelection();
+      personList.clear();
+    }
+  }
+  Future<void> Function() get resetCheckRecordDataAfterSave => _resetCheckRecordDataAfterSave;
+
 
 
 }

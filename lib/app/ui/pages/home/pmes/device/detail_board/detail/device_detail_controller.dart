@@ -33,6 +33,8 @@ import 'package:desktop/app/ui/pages/home/mesm/quality_inspection/create_inspect
 import 'package:desktop/app/ui/pages/home/mesm/quality_inspection/create_inspection/create_inspection_view.dart';
 import 'package:desktop/app/ui/pages/over_production_process/over_production_process_controller.dart';
 import 'package:desktop/app/ui/pages/over_production_process/over_production_process_view.dart';
+import 'package:desktop/app/ui/pages/transfer_order/transfer_order_controller.dart';
+import 'package:desktop/app/ui/pages/transfer_order/transfer_order_view.dart';
 import 'package:desktop/app/utils/app_config.dart';
 import 'package:desktop/app/utils/dialog_utils.dart';
 import 'package:desktop/app/utils/progress_dialog_util.dart';
@@ -575,6 +577,7 @@ class DeviceDetailController
   void scanQueryDataOnChanged({String? keyWord, String? keyValue}) {
     taskListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
+      ///如果是扫码查询的话，todo
       taskListPageConfig.queryData![keyWord] = keyValue;
     }
   }
@@ -665,6 +668,10 @@ class DeviceDetailController
       case '${AppConfig.pMesDeviceDetailBtn}-${AppConfig.invAttach}':
         await getInvAttach();
         break;
+      case '${AppConfig.pMesDeviceDetailBtn}-${AppConfig.transferOrder}':
+        item as MoTaskModel;
+        await transferTask(item);
+        break;
     }
   }
 
@@ -687,15 +694,45 @@ class DeviceDetailController
       return;
     }
     //endregion
-    var dialogRes = await DialogUtils.showConfirmationDialog(
-      Get.context!, msg: '确认切单？',
+    var dialogRes = await DialogUtils.showCustomDialog<TransferOrderController, Map<String, String?>>(
+      Get.context!,
+      title: '确认切单？',
+      onConfirmName: '确认',
       barrierDismissible: false,
+      initialWidth: 550, initialHeight: 290,
+      contentPadding: const EdgeInsets.all(12),
+      content: TransferOrderView(),
+      controller: TransferOrderController(
+        initPsnId: item.emploeeId,
+        initDeviceId: item.deviceId,
+        initDeviceCode: item.deviceCode,
+        initDeviceName: item.deviceName,
+      ),
     );
-    if (dialogRes == null || !dialogRes){
+    if (dialogRes == null){
       isLoading = false;
       return;
     }
     ProgressDialogUtil.showProgressDialog(max: 2, msg: '正在提交切单数据', completedMsg: '数据刷新成功！');
+    //region 切换员工、设备
+    if ((item.emploeeId ?? '') != (dialogRes['psnId'] ?? '')
+        || (item.deviceId ?? '') != (dialogRes['deviceId'] ?? '')){
+      var res = await MoTaskRepository().updateEntity(item.taskId, {
+        'EmploeeId': dialogRes['psnId'],
+        'DeviceId': dialogRes['deviceId']
+      });
+      if (!res.isSuccess){
+        ToastNotification(Get.overlayContext!).error('员工、设备更新失败，请重试：${res.message}！');
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return;
+      }
+      item.emploeeId = dialogRes['psnId'];
+      item.deviceId = dialogRes['deviceId'];
+      item.deviceCode = dialogRes['deviceCode'];
+      item.deviceName = dialogRes['deviceName'];
+    }
+    //endregion
     //region 切单
     var res = await MoProcessRepository().shiftTask(deviceId, item.taskId);
     if (!res.isSuccess){
@@ -1111,7 +1148,7 @@ class DeviceDetailController
         ProgressDialogUtil.showProgressDialog(max: 1, msg: '正在打印装箱单', completedMsg: '打印完成！');
         String url = AddressService.getUrl(barcodeRes.data);
         Printer? printer = Printer(url: printerUrl, name: printerName);
-        Uint8List printContent = await DioService.downLoadFile(url);
+        Uint8List printContent = await DioService().downLoadFile(url);
         if (printContent.isEmpty){
           ToastNotification(Get.overlayContext!).error('打印失败！');
           ProgressDialogUtil.close();
@@ -1189,6 +1226,78 @@ class DeviceDetailController
         //endregion
         break;
     }
+  }
+
+  ///转单
+  Future<void> transferTask(MoTaskModel item) async{
+    if (isLoading){
+      ToastNotification(Get.overlayContext!).warn('正在执行！');
+      return;
+    }
+    isLoading = true;
+    if (item.taskId.isEmpty){
+      ToastNotification(Get.overlayContext!).warn('请先选择派工单！');
+      isLoading = false;
+      return;
+    }
+    if ((item.sign ?? 0) != MoTaskSign.ygq.sign){
+      ToastNotification(Get.overlayContext!).warn('只有[已挂起]的单据才能转单！');
+      isLoading = false;
+      return;
+    }
+    if ((item.assignQty ?? 0) - (item.qualifiedQty ?? 0) <= 0){
+      ToastNotification(Get.overlayContext!).warn('没有可生产的数量,不能转单!');
+      isLoading = false;
+      return;
+    }
+
+    var dialogRes = await DialogUtils.showCustomDialog<TransferOrderController, Map<String, String?>>(
+      Get.context!,
+      title: '确认转单？',
+      onConfirmName: '确认',
+      barrierDismissible: false,
+      initialWidth: 550, initialHeight: 290,
+      contentPadding: const EdgeInsets.all(12),
+      content: TransferOrderView(),
+      controller: TransferOrderController(
+        initPsnId: item.emploeeId,
+        initDeviceId: item.deviceId,
+        initDeviceCode: item.deviceCode,
+        initDeviceName: item.deviceName,
+      ),
+    );
+    if (dialogRes == null){
+      isLoading = false;
+      return;
+    }
+    ProgressDialogUtil.showProgressDialog(max: 2, msg: '正在提交转单数据', completedMsg: '数据刷新成功！');
+    //region 转单
+    MoTaskEntity entity = MoTaskEntity.fromJson(item.toJson());
+    entity.emploeeId = dialogRes['psnId'];
+    entity.deviceId = dialogRes['deviceId'];
+    entity.assignQty = (item.assignQty ?? 0) - (item.qualifiedQty ?? 0);
+    var res = await MoPMESTaskRepository().transTask(item.taskId, entity);
+    if (!res.isSuccess){
+      ToastNotification(Get.overlayContext!).error('转单失败！${res.message}！');
+      isLoading = false;
+      ProgressDialogUtil.close();
+      return;
+    }
+    ProgressDialogUtil.update(value: 1, msg: '转单成功，正在刷新数据');
+    //endregion
+
+    //region 刷新数据
+    bool res1 = await getCurrentTask(deviceId);
+    bool res2 = await getTaskList();
+    if (!res1 || !res2){
+      ProgressDialogUtil.close();
+    }
+    else {
+      ProgressDialogUtil.update(value: 2);
+    }
+    //endregion
+    update();
+    isLoading = false;
   }
 
 

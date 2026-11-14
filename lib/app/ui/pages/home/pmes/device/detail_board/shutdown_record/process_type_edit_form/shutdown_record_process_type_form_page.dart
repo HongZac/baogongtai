@@ -125,6 +125,7 @@ class ShutdownRecordProcessTypeFormPage extends BaseFormPage<ShutdownRecordProce
               trackColor: WidgetStateProperty.all(Colors.transparent),
             ),
             child: SingleChildScrollView(
+              padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
               child: SizedBox(
                 width: 2000,
                 child: Wrap(

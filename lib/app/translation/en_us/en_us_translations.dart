@@ -102,5 +102,6 @@ final Map<String, String> en_US = {
   'home.navigate.mes.base.workCenter': 'WorkCenter',
   'home.navigate.tm.invBarcode': 'InvBarcode',
   'home.navigate.cloudServiceTask': 'CloudServiceTask',
+  'home.navigate.inventoryAttach': 'InventoryAttach',
 };
 

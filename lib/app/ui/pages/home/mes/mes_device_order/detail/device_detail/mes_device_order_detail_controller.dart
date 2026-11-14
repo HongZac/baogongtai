@@ -563,6 +563,7 @@ class MesDeviceOrderDetailController
   void scanQueryDataOnChanged({String? keyWord, String? keyValue}) {
     wBEntryListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
+      ///如果是扫码查询的话，todo
       wBEntryListPageConfig.queryData![keyWord] = keyValue;
     }
   }

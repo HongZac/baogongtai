@@ -240,6 +240,7 @@ class InvBarcodeAddFormController
       isInit: false,
     );
     if (isOtherPageNeedChanged){
+      ToastNotification(Get.overlayContext!).info('产品已切换！');
       if (!showAppBar){
         invBarcodeDetailTabController.inventoryModel = InventoryModel.fromJson(inventoryModel.toJson());
         invBarcodeDetailTabController.key = inventoryModel.invID ?? '';

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:basement/utils.dart';
 import 'package:desktop/app/service/tcp_serial/serial_com_service/interface/serial_port_interface.dart';
 import 'package:desktop/app/service/tcp_serial/serial_com_service/model/serial_port_data_model.dart';
 import 'package:desktop/app/utils/toast_notification.dart';
@@ -8,19 +9,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:flutter_libserialport/flutter_libserialport.dart'
-if (dart.library.io) 'package:flutter_libserialport/flutter_libserialport.dart'
-as lib_serial_port;
+import 'package:libserialport_plus/libserialport_plus.dart'
+    if (dart.library.io) 'package:libserialport_plus/libserialport_plus.dart'
+    as lib_serial_port;
 import 'package:usb_serial/usb_serial.dart';
 
 
 class SerialPort extends SerialPortInterface {
   lib_serial_port.SerialPort? _serialPort;
-  //lib_serial_port.SerialPortReader? _reader;
-  //StreamSubscription<Uint8List>? _subscription;
+  lib_serial_port.SerialPortReader? _reader;
+  StreamSubscription<Uint8List>? _subscription;
   ///使用 Timer 代替 [_reader]、[_subscription]，
-  ///因为 0.6.0 版本的 _reader?.stream.listen 会导致 CPU 占用率过高
-  Timer? _timer;
+  ///因为 0.6.0 版本的 _reader?.stream.listen 会导致 CPU 占用率过高；
+  ///现不再使用 Timer，直接替换包：flutter_libserialport => libserialport_plus
+  //Timer? _timer;
 
   final int _minDataDelayTime = 700;
 
@@ -36,28 +38,78 @@ class SerialPort extends SerialPortInterface {
     _serialPort = lib_serial_port.SerialPort(portName);
 
     ///打开串口读写
-    bool isSuccess = _serialPort!.openReadWrite();
-    if (!isSuccess) {
-      isOpen = false;
+    try {
+      _serialPort!.open(lib_serial_port.SerialPortMode.read);
+      bool isSuccess = _serialPort!.isOpen();
+      if (!isSuccess) {
+        isOpen = false;
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+          ToastNotification(Get.overlayContext!).error('打开串口$portName时出错');
+        });
+        if (_serialPort != null){
+          if (_serialPort!.isOpen()) {
+            _serialPort!.close();
+          }
+          _serialPort!.dispose();
+          _serialPort = null;
+        }
+        return false;
+      }
+    } catch (e){
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-        ToastNotification(Get.overlayContext!).error('打开串口$portName时出错');
+        ToastNotification(Get.overlayContext!).error('打开串口$portName时出错：$e');
       });
+      isOpen = false;
+      if (_serialPort != null){
+        if (_serialPort!.isOpen()) {
+          _serialPort!.close();
+        }
+        _serialPort!.dispose();
+        _serialPort = null;
+      }
       return false;
     }
 
-    var config = lib_serial_port.SerialPortConfig();
-    config.baudRate = serialPortConfig.baudRate; //波特率 115200
-    config.bits = serialPortConfig.bits; //数据位
-    config.parity = serialPortConfig.parity; //校验位
-    config.stopBits = serialPortConfig.stopBits; //停止位
-    config.xonXoff = serialPortConfig.xonXoff;
-    config.rts = serialPortConfig.rts;
-    config.cts = serialPortConfig.cts;
-    config.dsr = serialPortConfig.dsr;
-    config.dtr = serialPortConfig.dtr;
-    _serialPort!.config = config;
-    config.dispose();
+    //region
+    lib_serial_port.SerialPortParity? serialPortParity;
+    try {
+      serialPortParity = lib_serial_port.SerialPortParity.fromValue(serialPortConfig.parity);
+    } catch (e){}
+    lib_serial_port.SerialPortRts? serialPortRts;
+    try {
+      serialPortRts = lib_serial_port.SerialPortRts.fromValue(serialPortConfig.rts);
+    } catch (e){}
+    lib_serial_port.SerialPortCts? serialPortCts;
+    try {
+      serialPortCts = lib_serial_port.SerialPortCts.fromValue(serialPortConfig.cts);
+    } catch (e){}
+    lib_serial_port.SerialPortDtr? serialPortDtr;
+    try {
+      serialPortDtr = lib_serial_port.SerialPortDtr.fromValue(serialPortConfig.dtr);
+    } catch (e){}
+    lib_serial_port.SerialPortDsr? serialPortDsr;
+    try {
+      serialPortDsr = lib_serial_port.SerialPortDsr.fromValue(serialPortConfig.dsr);
+    } catch (e){}
+    lib_serial_port.SerialPortXonXoff? serialPortXonXoff;
+    try {
+      serialPortXonXoff = lib_serial_port.SerialPortXonXoff.fromValue(serialPortConfig.xonXoff);
+    } catch (e){}
+    //endregion
+    var config = lib_serial_port.SerialPortConfig(
+      baudRate: serialPortConfig.baudRate,
+      bits: serialPortConfig.bits,
+      parity: serialPortParity,
+      stopBits: serialPortConfig.stopBits,
+      rts: serialPortRts,
+      cts: serialPortCts,
+      dtr: serialPortDtr,
+      dsr: serialPortDsr,
+      xonXoff: serialPortXonXoff,
+    );
+    _serialPort!.setConfig(config);
 
+    /*
     _timer = Timer.periodic(Duration(milliseconds: _minDataDelayTime), (timer) async {
       if (!(_serialPort?.isOpen ?? false)){
         ///串口已关闭
@@ -99,9 +151,10 @@ class SerialPort extends SerialPortInterface {
         ));
       }
     });
-    /*
+    */
+
     ///读串口数据
-    _reader = lib_serial_port.SerialPortReader(_serialPort!, timeout: 300);
+    _reader = lib_serial_port.SerialPortReader(_serialPort!);
     _subscription = _reader?.stream.listen((data) async {
       ///这里不要用防抖（Timer），会导致称重数据无法传递（称重消息每 50ms 发送一次，Timer 计时需要 1000ms）
       int currentKeyPressTime = DateTime.now().millisecondsSinceEpoch;
@@ -144,7 +197,7 @@ class SerialPort extends SerialPortInterface {
         isConnectMsg: true,
       ));
     });
-    */
+
 
     isOpen = true;
     return true;
@@ -153,20 +206,22 @@ class SerialPort extends SerialPortInterface {
   @override
   Future<bool> close() async {
     ///停止读串口
-    //if (_subscription != null) {
-    //  _subscription!.cancel();
-    //  _subscription = null;
-    //}
-    //if (_reader != null) {
-    //  _reader!.close();
-    //  _reader = null;
-    //}
-    if (_timer != null){
-      _timer!.cancel();
+    if (_subscription != null) {
+      await _subscription!.cancel();
+      _subscription = null;
     }
-    if (_serialPort?.isOpen ?? false) {
-      _serialPort!.flush();
-      _serialPort!.close();
+    if (_reader != null) {
+      await _reader!.close();
+      _reader = null;
+    }
+    //if (_timer != null){
+    //  _timer!.cancel();
+    //}
+    if (_serialPort != null){
+      if (_serialPort!.isOpen()) {
+        _serialPort!.close();
+      }
+      _serialPort!.dispose();
       _serialPort = null;
     }
     isOpen = false;
@@ -176,7 +231,7 @@ class SerialPort extends SerialPortInterface {
   /// Lists the serial ports available on the system.
   static Future<List<String>> availablePorts() async {
     if (!kIsWeb && GetPlatform.isWindows){
-      return lib_serial_port.SerialPort.availablePorts;
+      return lib_serial_port.SerialPort.getAvailablePorts();
     }
     else if (!kIsWeb && GetPlatform.isAndroid) {
       //todo 未测试 https://pub.dev/packages/usb_serial

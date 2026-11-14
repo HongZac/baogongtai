@@ -201,11 +201,21 @@ class DeviceItem extends StatelessWidget{
                               ),
                             ),
                           ),
-                          Text(
-                            DataUtils.getNotConnectedZh(content: item.model.deviceStatus ?? '', type: 1),
-                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                color: SignColorUtil().getDeviceSignColor(item.model.deviceSign ?? 0),
-                                fontSize: Theme.of(context).textTheme.bodyMedium!.fontSize! * 1.3
+                          Tooltip(
+                            message: item.model.deviceSign != DeviceSign.tjz.sign
+                                ? ''
+                                : '反馈停机原因',
+                            child: InkWell(
+                              onTap: item.model.deviceSign != DeviceSign.tjz.sign ? null : () async {
+                                await ctl.shutdownReasonOnChanged(item);
+                              },
+                              child: Text(
+                                DataUtils.getNotConnectedZh(content: item.model.deviceStatus ?? '', type: 1),
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                  color: SignColorUtil().getDeviceSignColor(item.model.deviceSign ?? 0),
+                                  fontSize: Theme.of(context).textTheme.bodyMedium!.fontSize! * 1.3
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -711,7 +721,16 @@ class DeviceItem extends StatelessWidget{
                   );
                 }
             ),*/
-          ],
+            choiceWidget(
+                context,
+                icon: Icons.published_with_changes,
+                iconColor: AppColors.mainColorList[5],
+                title: '修改设备状态',
+                onTap: () async{
+                  await ctl.changeDeviceSign(item);
+                }
+            ),
+        ],
         ),
       ),
     );

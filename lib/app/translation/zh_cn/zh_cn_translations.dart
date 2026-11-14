@@ -98,4 +98,5 @@ final Map<String, String> zh_CN = {
   'home.navigate.mes.base.workCenter': '加工中心',
   'home.navigate.tm.invBarcode': '物料条码',
   'home.navigate.cloudServiceTask': '云传消息',
+  'home.navigate.inventoryAttach': '产品图纸',
 };

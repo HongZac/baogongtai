@@ -40,7 +40,7 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
   /// 基类中重写
   EditFormItem objectItem = EditFormItem();
 
-  ///当前报工单对应产品的产品档案
+  ///当前次品单对应产品的产品档案
   ///
   /// 用来获取产品标准单重、标准装箱数==[taskModel.packingQty]、产品助记码……
   InventoryModel inventoryModel = InventoryModel();
@@ -235,7 +235,7 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
         }
       }
       checkRecordModel.teamId = teamId;
-      teamAdapter?.validModelValue(checkRecordModel.teamId);
+      await teamAdapter?.validModelValue(checkRecordModel.teamId);
     }
   }
   ///根据车间和生产时间计算默认的班次信息
@@ -539,7 +539,7 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
     if (depAdapter != null
         && (checkRecordModel.depId ?? '').isEmpty && list.isNotEmpty){
       List<String> depIdList = list.map((e) => (e as PersonModel).deptID ?? '').toSet().toList();
-      if (depIdList.isNotEmpty){
+      if (depIdList.isNotEmpty && depIdList[0].isNotEmpty){
         await depAdapter!.validModelValue(depIdList[0]);
         DepartmentModel depItem = depAdapter!.dataList.firstWhereOrNull(
                 (element) => element.isSelected)!;
@@ -610,7 +610,7 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
 
 
 
-  ///获取当前报工单对应产品的产品档案
+  ///获取当前次品单对应产品的产品档案
   Future<void> _getInventoryInfo(String invId) async {
     var res = await InventoryRepository().getFormData(invId);
     if (!res.isSuccess){
@@ -618,7 +618,7 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
     }
     inventoryModel = res.data;
   }
-  ///获取当前报工单对应产品的产品档案
+  ///获取当前次品单对应产品的产品档案
   Future<void> Function(String invId) get getInventoryInfo => _getInventoryInfo;
 
 
@@ -672,7 +672,7 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
 
 
 
-  ///写入历史选中的员工数据
+  ///写入历史选中的员工数据/登录账号对应的员工数据
   Future<void> _setTheLastSelectedPsnData(List<dynamic> theLastSelectedPsnList) async {
     List<PersonModel> psnList = [];
     ///这里这样写的原因是，因为以前的代码错误，保存在本地的[theLastSelectedPsnList]可能会有 List<Map>、List<PersonModel> 两种类型
@@ -685,16 +685,34 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
     if (psnList.isNotEmpty){
       if (isPsnHasAdapter) {
         await personAdapter?.validViewValue(psnList);
-        await psnOnChanged(psnList);
+        //await psnOnChanged(psnList);
       }
       else {
         personList.clear();
         personList.addAll(psnList);
-        await psnOnChanged(personList);
+        //await psnOnChanged(personList);
+      }
+
+      ///这里不直接使用 [psnOnChanged()]的原因是，
+      ///执行[psnOnChanged]时会保存上次报次品时选中的员工数据，
+      ///但是这里的员工数据并不是主动选中的，不需要保存
+      checkRecordModel.empId = psnList.map((e) => e.id).join(',');
+      checkRecordModel.emploee = psnList.map((e) => e.name).join(',');
+
+      ///如果当前还未选择车间，则取当前人员所在的车间
+      if (depAdapter != null
+          && (checkRecordModel.depId ?? '').isEmpty && psnList.isNotEmpty){
+        List<String> depIdList = psnList.map((e) => e.deptID ?? '').toSet().toList();
+        if (depIdList.isNotEmpty && depIdList[0].isNotEmpty){
+          await depAdapter!.validModelValue(depIdList[0]);
+          DepartmentModel depItem = depAdapter!.dataList.firstWhereOrNull(
+                  (element) => element.isSelected)!;
+          await _depOnChanged(depItem);
+        }
       }
     }
   }
-  ///写入历史选中的员工数据
+  ///写入历史选中的员工数据/登录账号对应的员工数据
   Future<void> Function(List<dynamic> theLastSelectedPsnList) get setTheLastSelectedPsnData => _setTheLastSelectedPsnData;
 
 
@@ -801,9 +819,9 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
             ///判断正则表达式
             RegExp pattern = RegExp(cc);
             return pattern.hasMatch(sn);
-            return sn.contains(pattern);
+            //return sn.contains(pattern);
           }
-          return false;
+          //return false;
         });
         return sCCRes == null;
       });
@@ -910,10 +928,8 @@ mixin CheckRecordInterface on CheckRecordPrintBarcodeInterface {
 
   ///次品记录提交成功后，刷新数据填报区域的数据
   Future<void> _resetCheckRecordDataAfterSave() async {
-    checkRecordModel.empId = null;
-    checkRecordModel.emploee = null;
-    personAdapter?.clearSelection();
-    personList.clear();
+    ///任务单报次品：报次品完成后，如果不需要写入历史选中的员工数据，且当前登录账号没有对应员工数据，则清空员工数据
+    ///派工单报次品：报次品完成后，如果不需要写入历史选中的员工数据，且当前派工单没有对应员工数据，则清空员工数据
     checkRecordModel.comDefects = null;
     comDefectAdapter?.clearSelection();
     checkRecordModel.disposeFlow = null;

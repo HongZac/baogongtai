@@ -5,15 +5,20 @@ import 'dart:io';
 import 'package:basement/basement.dart';
 import 'package:basement/model.dart';
 import 'package:basement/repository.dart';
-import 'package:basement/service.dart';
 import 'package:basement/utils.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/model/web_socket_model.dart';
 import 'package:desktop/app/service/tts_service.dart';
 import 'package:desktop/app/theme/app_colors.dart';
+import 'package:desktop/app/ui/pages/attach_view/attach_utils.dart';
+import 'package:desktop/app/ui/pages/change_device_sign/change_device_sign_controller.dart';
+import 'package:desktop/app/ui/pages/change_device_sign/change_device_sign_view.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/web_socket_stream_interface.dart';
+import 'package:desktop/app/ui/pages/home/pmes/device/detail_board/shutdown_record/process_type_edit_form/shutdown_record_process_type_form_controller.dart';
+import 'package:desktop/app/ui/pages/home/pmes/device/detail_board/shutdown_record/process_type_edit_form/shutdown_record_process_type_form_page.dart';
 import 'package:desktop/app/utils/app_config.dart';
+import 'package:desktop/app/utils/dialog_utils.dart';
 import 'package:desktop/app/service/app_service.dart';
 import 'package:desktop/app/utils/progress_dialog_util.dart';
 import 'package:desktop/app/utils/toast_notification.dart';
@@ -21,7 +26,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:desktop/app/utils/shared_preferences_keys.dart';
-import 'package:printing/printing.dart';
 
 
 ///设备监控
@@ -244,17 +248,26 @@ class DeviceController
             && res.data.initialPreviewConfig!.isNotEmpty && res.data.initialPreviewConfig![0].type == 'pdf'){
           String url = res.data.initialPreview?.asMap()[0] ?? '';
           if (url.isNotEmpty){
-            Uint8List uint8listForAllPage = await DioService.downLoadFile(AddressService.getUrl(url));
-            if (uint8listForAllPage.isNotEmpty){
-              var list = Printing.raster(uint8listForAllPage, pages: [0], dpi: 72);
-              var firstPage = await list.first;
-              Uint8List uint8list = await firstPage.toPng();
-              try {
-                var item = Get.find<ModelWithGetxController<MoDeviceTaskModel>>(tag: 'PMesDevice-${element.model.deviceId ?? ''}');
-                item.model.imageUint8List = uint8list;
-                item.update();
-              } catch (e){}
-            }
+            //Uint8List uint8listForAllPage = await DioService.downLoadFile(AddressService.getUrl(url));
+            //if (uint8listForAllPage.isNotEmpty){
+            //  var list = Printing.raster(uint8listForAllPage, pages: [0], dpi: 72);
+            //  var firstPage = await list.first;
+            //  Uint8List uint8list = await firstPage.toPng();
+            //  try {
+            //    var item = Get.find<ModelWithGetxController<MoDeviceTaskModel>>(tag: 'PMesDevice-${element.model.deviceId ?? ''}');
+            //    item.model.imageUint8List = uint8list;
+            //    item.update();
+            //  } catch (e){}
+            //}
+            var pdfControllerWithKeyModel = await AttachUtils().getPdfUint8List(
+              key: res.data.title ?? '',
+              url: url
+            );
+            try {
+              var item = Get.find<ModelWithGetxController<MoDeviceTaskModel>>(tag: 'PMesDevice-${element.model.deviceId ?? ''}');
+              item.model.imageUint8List = pdfControllerWithKeyModel.imageUint8List;
+              item.update();
+            } catch (e){}
           }
         }
       }
@@ -662,13 +675,18 @@ class DeviceController
                   && pres.data.initialPreviewConfig!.isNotEmpty && pres.data.initialPreviewConfig![0].type == 'pdf'){
                 String url = pres.data.initialPreview?.asMap()[0] ?? '';
                 if (url.isNotEmpty){
-                  Uint8List uint8listForAllPage = await DioService.downLoadFile(AddressService.getUrl(url));
-                  if (uint8listForAllPage.isNotEmpty){
-                    var list = Printing.raster(uint8listForAllPage, pages: [0], dpi: 72);
-                    var firstPage = await list.first;
-                    Uint8List uint8list = await firstPage.toPng();
-                    item.model.imageUint8List = uint8list;
-                  }
+                  //Uint8List uint8listForAllPage = await DioService.downLoadFile(AddressService.getUrl(url));
+                  //if (uint8listForAllPage.isNotEmpty){
+                  //  var list = Printing.raster(uint8listForAllPage, pages: [0], dpi: 72);
+                  //  var firstPage = await list.first;
+                  //  Uint8List uint8list = await firstPage.toPng();
+                  //  item.model.imageUint8List = uint8list;
+                  //}
+                  var pdfControllerWithKeyModel = await AttachUtils().getPdfUint8List(
+                    key: pres.data.title ?? '',
+                    url: url
+                  );
+                  item.model.imageUint8List = pdfControllerWithKeyModel.imageUint8List;
                 }
               }
             }
@@ -859,6 +877,96 @@ class DeviceController
       default:
         return '';
     }
+  }
+
+  ///修改设备状态
+  Future<void> changeDeviceSign(ModelWithGetxController<MoDeviceTaskModel> item) async {
+    if (isLoading) {
+      ToastNotification(Get.overlayContext!).warn('正在执行！');
+      return;
+    }
+    isLoading = true;
+    if (item.model.pickerNo == null || item.model.pickerNo!.isEmpty){
+      ToastNotification(Get.overlayContext!).error('当前设备未关联采集器！');
+      isLoading = false;
+      return;
+    }
+
+    var res = await DialogUtils.showCustomDialog<ChangeDeviceSignController, Map<String, dynamic>>(
+      Get.context!,
+      title: '修改设备状态',
+      onConfirmName: '确认',
+      barrierDismissible: false,
+      initialWidth: 600, initialHeight: 350,
+      //initialWidth: 500, initialHeight: 300,
+      contentPadding: const EdgeInsets.all(4),
+      content: ChangeDeviceSignView(),
+      controller: ChangeDeviceSignController(
+        pickerNo: item.model.pickerNo!,
+        initSign: item.model.deviceSign ?? 0,
+      ),
+    );
+    if (res != null && res['isSuccess'] == 1){
+      item.model.deviceSign = res['sign'];
+      item.model.deviceStatus = DeviceSign.values.firstWhereOrNull((element) => element.sign == item.model.deviceSign)?.name ?? '';
+      item.update();
+      getNumOfDeviceSign();
+    }
+
+    isLoading = false;
+  }
+
+  /// 停机原因选择
+  Future<void> shutdownReasonOnChanged(ModelWithGetxController<MoDeviceTaskModel> item) async {
+    if (isLoading){
+      ToastNotification(Get.overlayContext!).warn('正在执行！');
+      return;
+    }
+    isLoading = true;
+    ProgressDialogUtil.showProgressDialog(msg: '正在获取最近的停机记录');
+    var res = await MoProcessRepository().getPageList(PageConfig(
+      page: 1, rows: 1,
+      sidx: 'ProcessTime',
+      sord: 'desc',
+      queryData: {
+        'DeviceId':item.model.deviceId,
+        'ProcessClass': '2,4,8',
+      },
+    ));
+    if (!res.isSuccess){
+      ToastNotification(Get.overlayContext!).error('获取最近的停机记录时出错：${res.message}');
+      ProgressDialogUtil.close();
+      isLoading = false;
+      return;
+    }
+    if (res.rows.isEmpty){
+      ToastNotification(Get.overlayContext!).info('当前设备暂无停机记录！');
+      ProgressDialogUtil.close();
+      isLoading = false;
+      return;
+    }
+    MoProcessModel processModel = res.rows[0];
+      if (res.rows[0].processId == null || res.rows[0].processId!.isEmpty){
+      ToastNotification(Get.overlayContext!).info('停机记录主键为空，数据错误！');
+      ProgressDialogUtil.close();
+      isLoading = false;
+      return;
+    }
+    ProgressDialogUtil.close();
+    await DialogUtils.showCustomDialog<ShutdownRecordProcessTypeFormController, String>(
+      Get.context!,
+      title: '反馈停机原因',
+      isMaximize: true,
+      contentPadding: const EdgeInsets.all(0),
+      content: ShutdownRecordProcessTypeFormPage(),
+      controller: ShutdownRecordProcessTypeFormController(
+        processType: processModel.processType.toString(),
+        desc: processModel.description,
+        operatorId: processModel.operator,
+        processId: processModel.processId!,
+      ),
+    );
+    isLoading = false;
   }
 
 

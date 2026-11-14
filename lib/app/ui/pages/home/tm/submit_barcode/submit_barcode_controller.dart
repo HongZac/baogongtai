@@ -462,6 +462,7 @@ class SubmitBarcodeController
   void scanQueryDataOnChanged({String? keyWord, String? keyValue}) {
     dataListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
+      ///如果是扫码查询的话，todo
       dataListPageConfig.queryData![keyWord] = keyValue;
     }
   }

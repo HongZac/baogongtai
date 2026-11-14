@@ -140,7 +140,7 @@ class DioInspectorView extends BaseDialogPage<DioInspectorController> {
       key: ValueKey(item.uuid),
       color: Colors.transparent,
       child: SizedBox(
-        height: Theme.of(context).textTheme.bodyLarge!.fontSize! * 4,
+        height: Theme.of(context).textTheme.bodyLarge!.fontSize! * 4.5,
         child: MouseRegion(
           onEnter: (PointerEnterEvent pointerEnterEvent){
             controller.mouseEnterKeyOnChanged(isEnter: true, key: item.uuid);
@@ -219,6 +219,7 @@ class DioInspectorView extends BaseDialogPage<DioInspectorController> {
                               ],
                           ],
                         ),
+                        const SizedBox(height: 4,),
                         Text(
                           (item.requestOptions?.uri.toString() ?? '').replaceFirst(AddressService.host, ''),
                           style: Theme.of(context).textTheme.bodyLarge,
@@ -263,36 +264,38 @@ class DioInspectorView extends BaseDialogPage<DioInspectorController> {
     if (_.selectedResponse == null){
       return const SizedBox.shrink();
     }
-    DioLogDataModel model = _.selectedResponse!;
-    String durationStr = model.requestDuration == null
-        ? ''
-        : model.requestDuration!.inMilliseconds < 1000
-        ? '${model.requestDuration!.inMilliseconds}ms'
-        : model.requestDuration!.inSeconds < 60
-        ? '${(model.requestDuration!.inMilliseconds / 1000).toStringAsFixed(2)}s'
-        : '${(model.requestDuration!.inMilliseconds / 1000 / 60).toStringAsFixed(2)}min';
-
-    int responseTotalSize = (model.responseHeadSize ?? 0) + (model.responseBodySize ?? 0);
-    String responseTotalSizeStr = responseTotalSize <= 0
-        ? '0B'
-        : responseTotalSize < 1024
-        ? '${responseTotalSize.toStringAsFixed(2)}B'
-        : responseTotalSize < 1024 * 1024
-        ? '${(responseTotalSize / 1024).toStringAsFixed(2)}KB'
-        : responseTotalSize < 1024 * 1024 * 1024
-        ? '${(responseTotalSize / 1024 / 1024).toStringAsFixed(2)}MB'
-        : '${(responseTotalSize / 1024 / 1024 / 1024).toStringAsFixed(2)}GB';
-
-    String requestBody = model.requestBodyStrFormat ?? '';
-    String responseBody = model.responseBodyStrFormat ?? '';
-
-    String uri = (model.requestOptions?.uri.toString() ?? '').replaceFirst(AddressService.host, '');
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints){
-        if (constraints.maxWidth < 100){
+        if (constraints.maxWidth < 250){
           return const SizedBox.shrink();
         }
+
+        DioLogDataModel model = _.selectedResponse!;
+        String durationStr = model.requestDuration == null
+            ? ''
+            : model.requestDuration!.inMilliseconds < 1000
+            ? '${model.requestDuration!.inMilliseconds}ms'
+            : model.requestDuration!.inSeconds < 60
+            ? '${(model.requestDuration!.inMilliseconds / 1000).toStringAsFixed(2)}s'
+            : '${(model.requestDuration!.inMilliseconds / 1000 / 60).toStringAsFixed(2)}min';
+
+        int responseTotalSize = (model.responseHeadSize ?? 0) + (model.responseBodySize ?? 0);
+        String responseTotalSizeStr = responseTotalSize <= 0
+            ? '0B'
+            : responseTotalSize < 1024
+            ? '${responseTotalSize.toStringAsFixed(2)}B'
+            : responseTotalSize < 1024 * 1024
+            ? '${(responseTotalSize / 1024).toStringAsFixed(2)}KB'
+            : responseTotalSize < 1024 * 1024 * 1024
+            ? '${(responseTotalSize / 1024 / 1024).toStringAsFixed(2)}MB'
+            : '${(responseTotalSize / 1024 / 1024 / 1024).toStringAsFixed(2)}GB';
+
+        String requestBody = model.requestBodyStrFormat ?? '';
+        String responseBody = model.responseBodyStrFormat ?? '';
+
+        String uri = (model.requestOptions?.uri.toString() ?? '').replaceFirst(AddressService.host, '');
+
         return Padding(
           padding: const EdgeInsetsGeometry.only(left: 2),
           child: Column(

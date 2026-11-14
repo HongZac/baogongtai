@@ -188,6 +188,13 @@ class MesTaskSettingPage extends BaseSettingPage<MesTaskSettingController>{
                       controller.pageConfigRowsOnChanged(index);
                     }
                   ),
+                  controller.enterDetailAfterSearchSettingWidget(
+                    context,
+                    isEnterDetailAfterSearch: _.isEnterDetailAfterSearch,
+                    isEnterDetailAfterSearchOnChanged: () {
+                      controller.isEnterDetailAfterSearchOnChanged();
+                    },
+                  ),
                 ],
               ),
             )

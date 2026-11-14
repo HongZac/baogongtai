@@ -476,7 +476,65 @@ class MesWorkCenterController
     else if (showLoading){
       ProgressDialogUtil.update(value: 1);
     }
+
+    switch (selectedCategorySign){
+      case 610001: ///任务单
+        ///如果只有一条数据，则判断是否需要直接进入报工页面
+        if (orderList.length == 1){
+          bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_WORK_CENTER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+          if (isEnterDetailAfterSearch){
+            ProgressDialogUtil.awaitCompletionDelay().then((value){
+              enterDetail(orderList[0]);
+            });
+          }
+        }
+        break;
+      case 650011: ///派工单
+        ///如果只有一条数据，则判断是否需要直接进入报工页面
+        if (taskList.length == 1){
+          bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_WORK_CENTER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+          if (isEnterDetailAfterSearch){
+            ProgressDialogUtil.awaitCompletionDelay().then((value){
+              enterDetail(taskList[0]);
+            });
+          }
+        }
+        break;
+    }
+
     return true;
+  }
+
+  void enterDetail(dynamic item) {
+    if (item is MoOpOrderModel){
+      Get.rootDelegate.toNamed(
+          AppRoutes.MES_WORK_CENTER_ORDER_DETAIL_MAIN_PAGE,
+          arguments: MoOpOrderModel.fromJson(item.toJson()),
+          parameters: {
+            'key': item.moOrderId,
+            'keyName': 'workCenterTask',
+            'orderOpenType': '2',
+            'workCenterId': selectedWorkCenterId,
+            'noPermission': (dataService.isEnableOperatePrivilege
+                && objectItem.buttons?['desktopUISettingBtn'] == null) ? '1' : '0',
+            'permissionInfo': BaseService.profile.isSystem == true ? '【${objectItem.progid}】【desktopUISettingBtn】' : '',
+          }
+      );
+    }
+    else if (item is MoTaskModel){
+      Get.rootDelegate.toNamed(
+          AppRoutes.MES_WORK_CENTER_TASK_DETAIL_MAIN_PAGE,
+          arguments: item,
+          parameters: {
+            'key': item.taskId,
+            'keyName': 'workCenterTask',
+            'taskOpenType': '2',
+            'noPermission': (dataService.isEnableOperatePrivilege
+                && objectItem.buttons?['desktopUISettingBtn'] == null) ? '1' : '0',
+            'permissionInfo': BaseService.profile.isSystem == true ? '【${objectItem.progid}】【desktopUISettingBtn】' : '',
+          }
+      );
+    }
   }
 
   void getWCPageConfig(String wcId) {
@@ -515,7 +573,6 @@ class MesWorkCenterController
         break;
     }
   }
-
 
   @override
   Future<void> onData(WebSocketModel webSocketModel) async {
@@ -905,294 +962,374 @@ class MesWorkCenterController
     ProgressDialogUtil.showProgressDialog(msg: '正在返回扫描结果');
 
     searchString = getBarCodePrefix(searchString, objectItem.attributeList);
-    List<String> list = searchString.split('|');
-    if (list.length < 3){
-      TipsUtils.showTip(
-        msg: '条码错误，请检查设置的默认条码格式！',
-        toastType: ToastType.warn,
-      );
-      isLoading = false;
-      ProgressDialogUtil.close();
-      return;
+    if (searchString.substring(0, 1) == r'$'){
+      ///该条码查询独立于其他条件查询
+      switch (selectedCategorySign) {
+        case 610001:
+          //region 任务单
+          ApiResult<PageResult<MoOpOrderModel>> res = await splitBy$BarcodeCheckOrder<PageResult<MoOpOrderModel>>(
+            searchString,
+            extraParams: {
+              'progid': 610001,
+              'ExtOpFlag': 0, ///ExtOpFlag=0 去除委外
+            },
+            rows: orderPageConfig.rows,
+            sidx: orderPageConfig.sidx,
+          );
+          if (!res.isSuccess){
+            ToastNotification(Get.overlayContext!).warn('${res.info}');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          orderList.clear();
+          orderList.addAll(res.data!.rows);
+          total = res.data!.records ?? 0;
+          totalPage = res.data!.total ?? 0;
+          nowPage = res.data!.page ?? 0;
+          isDataByScan = true;
+          isLoading = false;
+          update();
+          ProgressDialogUtil.update(value: 1);
+          ///如果只有一条数据，则判断是否需要直接进入报工页面
+          if (orderList.length == 1){
+            bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_WORK_CENTER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+            if (isEnterDetailAfterSearch){
+              await ProgressDialogUtil.awaitCompletionDelay();
+              enterDetail(orderList[0]);
+            }
+          }
+          return;
+          //endregion
+          break;
+        case 650011:
+          //region 派工单
+          ApiResult<PageResult<MoTaskModel>> res = await splitBy$BarcodeCheckTask<PageResult<MoTaskModel>>(
+            searchString,
+            extraParams: {
+              'progid': 650011,
+            },
+            rows: taskPageConfig.rows,
+            sidx: taskPageConfig.sidx,
+          );
+          if (!res.isSuccess){
+            ToastNotification(Get.overlayContext!).warn('${res.info}');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          taskList.clear();
+          taskList.addAll(res.data!.rows);
+          total = res.data!.records ?? 0;
+          totalPage = res.data!.total ?? 0;
+          nowPage = res.data!.page ?? 0;
+          isDataByScan = true;
+          isLoading = false;
+          update();
+          ProgressDialogUtil.update(value: 1);
+          ///如果只有一条数据，则判断是否需要直接进入报工页面
+          if (taskList.length == 1){
+            bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_WORK_CENTER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+            if (isEnterDetailAfterSearch){
+              await ProgressDialogUtil.awaitCompletionDelay();
+              enterDetail(taskList[0]);
+            }
+          }
+          return;
+          //endregion
+          break;
+      }
     }
-    switch (list[1]){
-      case 'F':
-        //region 生产任务单条码 610001；生产派工单条码 650011
-        switch (selectedCategorySign){
-          case 610001:
-            //region 任务单
-            if (list.length == 4){
-              if (list[2] == '610001'){
-                scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: list[3]);
-                res = await pageChanged(pageIndex: 1, showLoading: false);
-              }
-              else {
-                TipsUtils.showTip(
-                  msg: '条码错误！',
-                  toastType: ToastType.warn,
-                );
-                isLoading = false;
-                ProgressDialogUtil.close();
-                return;
-              }
-            }
-            else {
-              TipsUtils.showTip(
-                msg: '条码错误！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            //endregion
-            break;
-          case 650011:
-            //region 派工单
-            if (list.length == 4){
-              if (list[2] == '610001'){
-                scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: list[3]);
-                res = await pageChanged(pageIndex: 1, showLoading: false);
-              }
-              else if (list[2] == '650011'){
-                scanQueryDataOnChanged(keyWord: 'keyValue', keyValue: list[3]);
-                res = await pageChanged(pageIndex: 1, showLoading: false);
-              }
-              else {
-                TipsUtils.showTip(
-                  msg: '条码错误！',
-                  toastType: ToastType.warn,
-                );
-                isLoading = false;
-                ProgressDialogUtil.close();
-                return;
-              }
-            }
-            else {
-              TipsUtils.showTip(
-                msg: '条码错误！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            //endregion
-            break;
-        }
-        //endregion
-        break;
-      case 'T':
-        //region 工序条码 610001
-        switch (selectedCategorySign) {
-          case 610001:
-            //region 任务单
-            if (list.length == 4){
-              if (list[2] == '610001'){
-                var res1 = await MoWorkBillEntryRepository().getMoWorkBillEntry(list[3]);
-                if (!res1.isSuccess){
-                  TipsUtils.showTip(
-                    msg: '获取任务单信息和工序信息时出错：${res1.message}',
-                    toastType: ToastType.error,
-                  );
-                  isLoading = false;
-                  ProgressDialogUtil.close();
-                  return;
-                }
-                scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: res1.data.objectId);
-                res = await pageChanged(pageIndex: 1, showLoading: false);
-              }
-              else {
-                TipsUtils.showTip(
-                  msg: '条码错误！',
-                  toastType: ToastType.warn,
-                );
-                isLoading = false;
-                ProgressDialogUtil.close();
-                return;
-              }
-            }
-            else {
-              TipsUtils.showTip(
-                msg: '条码错误！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            //endregion
-            break;
-          case 650011:
-            //region 派工单
-            if (list.length == 4){
-              if (list[2] == '610001'){
-                scanQueryDataOnChanged(keyWord: 'MoOpId', keyValue: list[3]);
-                res = await pageChanged(pageIndex: 1, showLoading: false);
-              }
-              else {
-                TipsUtils.showTip(
-                  msg: '条码错误！',
-                  toastType: ToastType.warn,
-                );
-                isLoading = false;
-                ProgressDialogUtil.close();
-                return;
-              }
-            }
-            else {
-              TipsUtils.showTip(
-                msg: '条码错误！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            //endregion
-            break;
-        }
-        //endregion
-        break;
-      case 'IP':
-        //region 员工卡号
-        switch (selectedCategorySign){
-          case 610001:
-            //region 任务单
-            //endregion
-            break;
-          case 650011:
-            //region 派工单
-            String idCode = list[2];
-            var psnRes = await PersonRepository().getFormData('', '', {'IdCode': idCode}, 0);
-            if (!psnRes.isSuccess){
-              TipsUtils.showTip(
-                msg: '获取员工数据时出错：${psnRes.message}！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (psnRes.data.id.isEmpty){
-              TipsUtils.showTip(
-                msg: '查询不到该员工！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            scanQueryDataOnChanged(keyWord: 'EmploeeId', keyValue: psnRes.data.personID);
-            res = await pageChanged(pageIndex: 1, showLoading: false);
-            //endregion
-            break;
-        }
-        //endregion
-        break;
-      case 'G':
-        //region 员工条码
-        switch (selectedCategorySign) {
-          case 610001:
-            //region 任务单
-            //endregion
-            break;
-          case 650011:
-            //region 派工单
-            String psnNum = list[2];
-            var psnRes = await PersonRepository().getFormData('', '', {'PsnNum': psnNum}, 0);
-            if (!psnRes.isSuccess){
-              TipsUtils.showTip(
-                msg: '获取员工数据时出错：${psnRes.message}！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (psnRes.data.id.isEmpty){
-              TipsUtils.showTip(
-                msg: '查询不到该员工！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            scanQueryDataOnChanged(keyWord: 'EmploeeId', keyValue: psnRes.data.personID);
-            res = await pageChanged(pageIndex: 1, showLoading: false);
-            //endregion
-            break;
-        }
-        //endregion
-        break;
-      case 'X':
-        //region 产品序列号
-        switch (selectedCategorySign){
-          case 610001:
-            //region 任务单
-            String string = list[2];
-            var res1 = await MoOrderSNRepository().getModel(string);
-            if (!res1.isSuccess){
-              TipsUtils.showTip(
-                msg: '获取序列号数据时出错：${res1.message}！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (res1.data.id.isEmpty){
-              TipsUtils.showTip(
-                msg: '查询不到该序列号！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (res1.data.moOrderId == null || res1.data.moOrderId!.isEmpty){
-              TipsUtils.showTip(
-                msg: '该序列号未被分配到任务单！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if (res1.data.enableMark != 1){
-              TipsUtils.showTip(
-                msg: '该序列号已失效！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            orderPageConfig.queryData!['MoOrderId'] = res1.data.moOrderId;
-            res = await pageChanged(pageIndex: 1, showLoading: false);
-            if (res){
-              orderList.forEach((element) {
-                element.orderSN = string;
-              });
-            }
-            //endregion
-            break;
-          case 650011:
-            //region 派工单
-            //endregion
-            break;
-        }
-        //endregion
-        break;
-      default:
+    else {
+      List<String> list = searchString.split('|');
+      if (list.length < 3){
         TipsUtils.showTip(
-          msg: '条码错误！',
+          msg: '条码错误，请检查设置的默认条码格式！',
           toastType: ToastType.warn,
         );
         isLoading = false;
         ProgressDialogUtil.close();
         return;
+      }
+      switch (list[1]){
+        case 'F':
+          //region 生产任务单条码 610001；生产派工单条码 650011
+          switch (selectedCategorySign){
+            case 610001:
+              //region 任务单
+              if (list.length == 4){
+                if (list[2] == '610001'){
+                  scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: list[3]);
+                  res = await pageChanged(pageIndex: 1, showLoading: false);
+                }
+                else {
+                  TipsUtils.showTip(
+                    msg: '条码错误！',
+                    toastType: ToastType.warn,
+                  );
+                  isLoading = false;
+                  ProgressDialogUtil.close();
+                  return;
+                }
+              }
+              else {
+                TipsUtils.showTip(
+                  msg: '条码错误！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              //endregion
+              break;
+            case 650011:
+              //region 派工单
+              if (list.length == 4){
+                if (list[2] == '610001'){
+                  scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: list[3]);
+                  res = await pageChanged(pageIndex: 1, showLoading: false);
+                }
+                else if (list[2] == '650011'){
+                  scanQueryDataOnChanged(keyWord: 'keyValue', keyValue: list[3]);
+                  res = await pageChanged(pageIndex: 1, showLoading: false);
+                }
+                else {
+                  TipsUtils.showTip(
+                    msg: '条码错误！',
+                    toastType: ToastType.warn,
+                  );
+                  isLoading = false;
+                  ProgressDialogUtil.close();
+                  return;
+                }
+              }
+              else {
+                TipsUtils.showTip(
+                  msg: '条码错误！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              //endregion
+              break;
+          }
+          //endregion
+          break;
+        case 'T':
+          //region 工序条码 610001
+          switch (selectedCategorySign) {
+            case 610001:
+              //region 任务单
+              if (list.length == 4){
+                if (list[2] == '610001'){
+                  var res1 = await MoWorkBillEntryRepository().getMoWorkBillEntry(list[3]);
+                  if (!res1.isSuccess){
+                    TipsUtils.showTip(
+                      msg: '获取任务单信息和工序信息时出错：${res1.message}',
+                      toastType: ToastType.error,
+                    );
+                    isLoading = false;
+                    ProgressDialogUtil.close();
+                    return;
+                  }
+                  scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: res1.data.objectId);
+                  res = await pageChanged(pageIndex: 1, showLoading: false);
+                }
+                else {
+                  TipsUtils.showTip(
+                    msg: '条码错误！',
+                    toastType: ToastType.warn,
+                  );
+                  isLoading = false;
+                  ProgressDialogUtil.close();
+                  return;
+                }
+              }
+              else {
+                TipsUtils.showTip(
+                  msg: '条码错误！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              //endregion
+              break;
+            case 650011:
+              //region 派工单
+              if (list.length == 4){
+                if (list[2] == '610001'){
+                  scanQueryDataOnChanged(keyWord: 'MoOpId', keyValue: list[3]);
+                  res = await pageChanged(pageIndex: 1, showLoading: false);
+                }
+                else {
+                  TipsUtils.showTip(
+                    msg: '条码错误！',
+                    toastType: ToastType.warn,
+                  );
+                  isLoading = false;
+                  ProgressDialogUtil.close();
+                  return;
+                }
+              }
+              else {
+                TipsUtils.showTip(
+                  msg: '条码错误！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              //endregion
+              break;
+          }
+          //endregion
+          break;
+        case 'IP':
+          //region 员工卡号
+          switch (selectedCategorySign){
+            case 610001:
+              //region 任务单
+              //endregion
+              break;
+            case 650011:
+              //region 派工单
+              String idCode = list[2];
+              var psnRes = await PersonRepository().getFormData('', '', {'IdCode': idCode}, 0);
+              if (!psnRes.isSuccess){
+                TipsUtils.showTip(
+                  msg: '获取员工数据时出错：${psnRes.message}！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              if (psnRes.data.id.isEmpty){
+                TipsUtils.showTip(
+                  msg: '查询不到该员工！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              scanQueryDataOnChanged(keyWord: 'EmploeeId', keyValue: psnRes.data.personID);
+              res = await pageChanged(pageIndex: 1, showLoading: false);
+              //endregion
+              break;
+          }
+          //endregion
+          break;
+        case 'G':
+          //region 员工条码
+          switch (selectedCategorySign) {
+            case 610001:
+              //region 任务单
+              //endregion
+              break;
+            case 650011:
+              //region 派工单
+              String psnNum = list[2];
+              var psnRes = await PersonRepository().getFormData('', '', {'PsnNum': psnNum}, 0);
+              if (!psnRes.isSuccess){
+                TipsUtils.showTip(
+                  msg: '获取员工数据时出错：${psnRes.message}！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              if (psnRes.data.id.isEmpty){
+                TipsUtils.showTip(
+                  msg: '查询不到该员工！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              scanQueryDataOnChanged(keyWord: 'EmploeeId', keyValue: psnRes.data.personID);
+              res = await pageChanged(pageIndex: 1, showLoading: false);
+              //endregion
+              break;
+          }
+          //endregion
+          break;
+        case 'X':
+          //region 产品序列号
+          switch (selectedCategorySign){
+            case 610001:
+              //region 任务单
+              String string = list[2];
+              var res1 = await MoOrderSNRepository().getModel(string);
+              if (!res1.isSuccess){
+                TipsUtils.showTip(
+                  msg: '获取序列号数据时出错：${res1.message}！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              if (res1.data.id.isEmpty){
+                TipsUtils.showTip(
+                  msg: '查询不到该序列号！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              if (res1.data.moOrderId == null || res1.data.moOrderId!.isEmpty){
+                TipsUtils.showTip(
+                  msg: '该序列号未被分配到任务单！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              if (res1.data.enableMark != 1){
+                TipsUtils.showTip(
+                  msg: '该序列号已失效！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              orderPageConfig.queryData!['MoOrderId'] = res1.data.moOrderId;
+              res = await pageChanged(pageIndex: 1, showLoading: false);
+              if (res){
+                orderList.forEach((element) {
+                  element.orderSN = string;
+                });
+              }
+              //endregion
+              break;
+            case 650011:
+              //region 派工单
+              //endregion
+              break;
+          }
+          //endregion
+          break;
+        default:
+          TipsUtils.showTip(
+            msg: '条码错误！',
+            toastType: ToastType.warn,
+          );
+          isLoading = false;
+          ProgressDialogUtil.close();
+          return;
+      }
     }
 
     isDataByScan = true;
@@ -1210,6 +1347,7 @@ class MesWorkCenterController
     taskPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     orderPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
+      ///如果是扫码查询的话，todo
       switch (selectedCategorySign){
         case 610001:
           //region 任务单
@@ -1418,29 +1556,7 @@ class MesWorkCenterController
   Future<void> itemOnTap(dynamic item) async{  }
 
   Future<void> itemOnDoubleTap(dynamic item) async{
-    if (item is MoOpOrderModel){
-      Get.rootDelegate.toNamed(
-          AppRoutes.MES_WORK_CENTER_ORDER_DETAIL_MAIN_PAGE,
-          arguments: item,
-          parameters: {
-            'key': item.moOrderId,
-            'keyName': 'workCenterTask',
-            'orderOpenType': '2',
-            'workCenterId': selectedWorkCenterId,
-          }
-      );
-    }
-    else if (item is MoTaskModel){
-      Get.rootDelegate.toNamed(
-        AppRoutes.MES_WORK_CENTER_TASK_DETAIL_MAIN_PAGE,
-        arguments: item,
-        parameters: {
-          'key': item.taskId,
-          'keyName': 'workCenterTask',
-          'taskOpenType': '2',
-        }
-      );
-    }
+    enterDetail(item);
   }
 
   Future<void> itemOnLongPress(dynamic item) async{  }

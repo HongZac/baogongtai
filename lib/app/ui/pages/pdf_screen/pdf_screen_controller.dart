@@ -3,12 +3,13 @@ import 'dart:async';
 
 import 'package:basement/service.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/interface_util.dart';
+import 'package:desktop/app/ui/pages/home/cloud_service_task/cloud_service_task_controller.dart';
+import 'package:desktop/app/ui/widget/pdf_view/pdf_view_data_manager.dart';
 import 'package:desktop/app/utils/progress_dialog_util.dart';
 import 'package:desktop/app/utils/toast_notification.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:printing/printing.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 
 ///PDF的查看和打印页面
@@ -20,19 +21,28 @@ class PdfScreenController
   final String pdfUrl;
   final VoidCallback? onPressed;
 
+  ///pdf 数据流（用来在前台显示 pdf 预览）
   Uint8List pdfUint8List = Uint8List(0);
-  final PdfViewerController pdfViewerController = PdfViewerController();
   bool isPDFLoadFailed = false;
 
-  ///旋转角度
-  int turns = 0;
-  double? pdfAreaHeight;
-  double? pdfAreaWidth;
-
+  ///PDF 视图管理器
+  PdfViewDataManager? pdfViewDataManager;
+  ///当前页（用于判断是否需要刷新工具栏）
+  int pageNumber = 0;
+  ///当前 pdf 的总页数（用于判断是否需要刷新工具栏）
+  int pageCount = 0;
+  ///当前 pdf 的缩放级别（用于判断是否需要刷新工具栏）
+  double zoom = 1;
 
   bool isLoading = false;
+  bool isInitData = false;
+  bool _isClosed = false;
 
-  PdfScreenController({required this.pageTitle, required this.pdfUrl, this.onPressed});
+  PdfScreenController({
+    required this.pageTitle,
+    required this.pdfUrl,
+    this.onPressed,
+  });
 
   @override
   void onInit() {
@@ -47,8 +57,30 @@ class PdfScreenController
     if (pdfUint8List.isEmpty){
       isPDFLoadFailed = true;
     }
+    if (_isClosed) {
+      ProgressDialogUtil.close();
+      return;
+    }
+    isInitData = true;
+
     update();
     ProgressDialogUtil.update(value: 1);
+  }
+
+  @override
+  void update([List<Object>? ids, bool condition = true]) {
+    super.update();
+    try {
+      var ctl = Get.find<CloudServiceTaskController>();
+      ctl.update();
+    } catch (e){}
+  }
+
+  Future<void> pdfViewDataManagerListener() async {
+    if (_isClosed || pdfViewDataManager == null) { return; }
+    if (pdfViewDataManager!.pdfViewerController.isReady) {
+      //todo
+    }
   }
 
 
@@ -59,7 +91,7 @@ class PdfScreenController
     }
     isLoading = true;
     if (isPDFLoadFailed){
-      ToastNotification(Get.overlayContext!).error("PDF文档加载失败！");
+      ToastNotification(Get.overlayContext!).error("PDF文档加载失败，无法打印！");
       isLoading = false;
       return;
     }
@@ -86,6 +118,18 @@ class PdfScreenController
     }
     ToastNotification(Get.overlayContext!).success('打印成功！');
     isLoading = false;
+  }
+
+
+  @override
+  void onClose() {
+    _isClosed = true;
+    ProgressDialogUtil.close();
+    if (pdfViewDataManager != null){
+      pdfViewDataManager!.pdfViewerController.removeListener(pdfViewDataManagerListener);
+      pdfViewDataManager = null;
+    }
+    super.onClose();
   }
 
 

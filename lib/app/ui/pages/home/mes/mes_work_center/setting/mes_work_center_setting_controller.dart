@@ -49,7 +49,7 @@ class MesWorkCenterSettingController
   final List<ChoiceChipModel> tabValueList = [
     ChoiceChipModel(icon: Icons.filter_alt_sharp, title: '加工中心-车间筛选', keyName: 'dep'),
     ChoiceChipModel(icon: Icons.filter_alt_sharp, title: '加工中心-加工中心筛选', keyName: 'workCenter'),
-    ChoiceChipModel(icon: Icons.category, title: '单据类型设置', keyName: 'sign'),
+    ChoiceChipModel(icon: Icons.category, title: '单据类型设置', keyName: 'category'),
     ChoiceChipModel(icon: Icons.bookmarks, title: '状态标签设置', keyName: 'sign'),
     ChoiceChipModel(icon: Icons.calendar_month, title: '日期过滤设置', keyName: 'date'),
     ChoiceChipModel(icon: Icons.search, title: '关键字搜索设置', keyName: 'orderKeyWordSearch'),
@@ -83,6 +83,9 @@ class MesWorkCenterSettingController
 
   ///单页显示记录数
   int pageConfigRows = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_WORK_CENTER_PAGE_CONFIG_ROWS_KEY) ?? AppConfig.pageConfigRows;
+
+  /// 查询后如果只有一条数据，是否自动进入详情页面
+  bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_WORK_CENTER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
 
 
   MesWorkCenterSettingController({
@@ -180,6 +183,12 @@ class MesWorkCenterSettingController
   ///单页显示记录数 点击变化
   void pageConfigRowsOnChanged(int intValue) {
     pageConfigRows = intValue;
+    update();
+  }
+
+  ///查询后如果只有一条数据，是否自动进入详情页面 点击变化
+  void isEnterDetailAfterSearchOnChanged() {
+    isEnterDetailAfterSearch = !isEnterDetailAfterSearch;
     update();
   }
 
@@ -693,6 +702,7 @@ class MesWorkCenterSettingController
 
     //region 数据保存
     ShareStorageUtil.instance?.write(SharedPreferencesKeys.MES_WORK_CENTER_PAGE_CONFIG_ROWS_KEY, pageConfigRows);
+    ShareStorageUtil.instance?.write(SharedPreferencesKeys.MES_WORK_CENTER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY, isEnterDetailAfterSearch);
     //endregion
     ProgressDialogUtil.update(value: 1, msg: '设置成功，正在刷新数据！');
 

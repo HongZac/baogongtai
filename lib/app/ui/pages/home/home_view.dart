@@ -293,25 +293,28 @@ class HomeView extends GetView<HomeController> {
                     const SizedBox(width: 8,),
 
                     ///网络请求日志
-                    MineIconButton(
-                      onPressed: () async {
-                        await DialogUtils.showCustomDialog<DioInspectorController, bool>(
-                          context,
-                          isMaximize: true,
-                          title: '网络请求日志',
-                          isNeedConfirmBtn: false,
-                          contentPadding: const EdgeInsets.all(0),
-                          content: const DioInspectorView(),
-                          controller: DioInspectorController(),
-                        );
-                      },
-                      tooltip: '网络日志'.tr,
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                      iconSize: Theme.of(Get.context!).appBarTheme.iconTheme!.size! * 1.2,
-                      icon: FluentIcons.globe_sync_20_regular,
-                      iconColor: Theme.of(context).navigationRailTheme.unselectedLabelTextStyle!.color
-                    ),
-                    const SizedBox(width: 18,),
+                    if (kDebugMode || ((BaseService.profile.isSystem ?? false) && _.showDioLogger))
+                    ...[
+                      MineIconButton(
+                        onPressed: () async {
+                          await DialogUtils.showCustomDialog<DioInspectorController, bool>(
+                            context,
+                            isMaximize: true,
+                            title: '网络请求日志',
+                            isNeedConfirmBtn: false,
+                            contentPadding: const EdgeInsets.all(0),
+                            content: const DioInspectorView(),
+                            controller: DioInspectorController(),
+                          );
+                        },
+                        tooltip: '网络日志'.tr,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                        iconSize: Theme.of(Get.context!).appBarTheme.iconTheme!.size! * 1.2,
+                        icon: FluentIcons.globe_sync_20_regular,
+                        iconColor: Theme.of(context).navigationRailTheme.unselectedLabelTextStyle!.color
+                      ),
+                      const SizedBox(width: 18,),
+                    ],
 
                     Container(
                       width: kIsWeb || GetPlatform.isWindows

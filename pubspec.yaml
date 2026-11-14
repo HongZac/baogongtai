@@ -7,7 +7,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # 1.1 flutter 2.8.1 =>2.10.1
 #同时在 windows/runner/Runner.rc 中修改版本号
-version: 2.7.0+273
+version: 2.7.0+283
 environment:
   sdk: ">=3.0.0 <=4.0.0"
 
@@ -56,7 +56,9 @@ dependencies:
   google_fonts: ^8.0.2
 
   syncfusion_flutter_charts: ^33.1.47
-  syncfusion_flutter_pdfviewer: ^33.1.47
+
+  #PDF 预览 改用 pdfrx.PdfViewer
+  #syncfusion_flutter_pdfviewer: ^33.1.47
 
   cached_network_image: ^3.4.1
   photo_view: ^0.15.0
@@ -148,8 +150,9 @@ dependencies:
   #一个能够检测其子元素可见性并通知回调的小部件
   visibility_detector: ^0.4.0+2
 
-  #串口应用，不支持web
-  flutter_libserialport: ^0.6.0
+  #串口应用，不支持web CPU 占有率会过高
+  #flutter_libserialport: ^0.6.0
+  libserialport_plus: ^1.0.5
   #串口应用，android 用
   usb_serial: ^0.5.2
   #libserialport_plus: 0.1.0
@@ -161,6 +164,11 @@ dependencies:
 
   #界面分割，左右分，上下分。
   multi_split_view: ^3.6.0
+
+  #PDF查看器，也可以用于把 pdf 转换成图片格式
+  pdfrx: ^2.4.7
+
+  image: 4.8.0
 
 
 dev_dependencies:

@@ -69,6 +69,9 @@ class MesOrderSettingController
   ///单页显示记录数
   int pageConfigRows = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_ORDER_PAGE_CONFIG_ROWS_KEY) ?? AppConfig.pageConfigRows;
 
+  /// 查询后如果只有一条数据，是否自动进入详情页面
+  bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_ORDER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+
 
   MesOrderSettingController({
     super.progId = -1,
@@ -132,6 +135,13 @@ class MesOrderSettingController
     pageConfigRows = intValue;
     update();
   }
+
+  ///查询后如果只有一条数据，是否自动进入详情页面 点击变化
+  void isEnterDetailAfterSearchOnChanged() {
+    isEnterDetailAfterSearch = !isEnterDetailAfterSearch;
+    update();
+  }
+
 
   //endregion
 
@@ -489,6 +499,7 @@ class MesOrderSettingController
 
     //region 数据保存
     ShareStorageUtil.instance?.write(SharedPreferencesKeys.MES_ORDER_PAGE_CONFIG_ROWS_KEY, pageConfigRows);
+    ShareStorageUtil.instance?.write(SharedPreferencesKeys.MES_ORDER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY, isEnterDetailAfterSearch);
     //endregion
     ProgressDialogUtil.update(value: 1, msg: '设置成功，正在刷新数据！');
 

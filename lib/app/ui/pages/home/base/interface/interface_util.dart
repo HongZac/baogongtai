@@ -285,7 +285,7 @@ mixin InterfaceUtil {
 
   //region 单页显示记录数设置
 
-  ///设置控件
+  ///单页显示记录数设置控件
   Widget pageConfigRowsChoiceWidget(BuildContext context, {
     required int pageConfigRows,
     required ValueChanged<int> pageConfigRowsOnChanged,
@@ -310,6 +310,24 @@ mixin InterfaceUtil {
         numOnChanged: (double value){
           pageConfigRowsOnChanged(value.toInt());
         },
+      ),
+    );
+  }
+
+  ///设置控件
+  Widget enterDetailAfterSearchSettingWidget(BuildContext context,{
+    required bool isEnterDetailAfterSearch,
+    required VoidCallback isEnterDetailAfterSearchOnChanged,
+  }){
+    return SwitchListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      value: isEnterDetailAfterSearch,
+      onChanged: (bool? bool) {
+        isEnterDetailAfterSearchOnChanged();
+      },
+      title: Text(
+        '查询后如果只有一条数据，自动进入详情页面',
+        style: Theme.of(context).textTheme.bodyLarge,
       ),
     );
   }

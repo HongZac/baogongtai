@@ -27,6 +27,8 @@ import 'package:desktop/app/ui/pages/home/base/interface/search_interface/search
 import 'package:desktop/app/ui/pages/home/base/interface/search_interface/task_keyword_search_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/sign_filter_interface/sign_filter_interface.dart';
 import 'package:desktop/app/ui/pages/home/base/interface/sign_filter_interface/task_sign_filter_interface.dart';
+import 'package:desktop/app/ui/pages/transfer_order/transfer_order_controller.dart';
+import 'package:desktop/app/ui/pages/transfer_order/transfer_order_view.dart';
 import 'package:desktop/app/utils/app_config.dart';
 import 'package:desktop/app/utils/dialog_utils.dart';
 import 'package:desktop/app/utils/progress_dialog_util.dart';
@@ -175,6 +177,38 @@ class MesTaskController
       return PageResult();
     }
     return res;
+  }
+
+  @override
+  Future<bool> Function({int pageIndex, bool showLoading}) get pageChanged => ({int pageIndex = 1, bool showLoading = true}) async {
+    bool res = await super.pageChanged(pageIndex: pageIndex, showLoading: showLoading);
+    if (res){
+      ///如果只有一条数据，则判断是否需要直接进入报工页面
+      if (dataList.length == 1){
+        bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+        if (isEnterDetailAfterSearch){
+          ProgressDialogUtil.awaitCompletionDelay().then((value){
+            enterDetail(dataList[0]);
+          });
+        }
+      }
+    }
+    return res;
+  };
+
+  void enterDetail(MoTaskModel item) {
+    Get.rootDelegate.toNamed(
+        AppRoutes.MES_TASK_DETAIL_MAIN_PAGE,
+        arguments: item, //MoTaskModel.fromJson(item.toJson()),
+        parameters: {
+          'key': item.taskId,
+          'keyName': 'task',
+          'taskOpenType': '0',
+          'noPermission': (dataService.isEnableOperatePrivilege
+              && objectItem.buttons?['desktopUISettingBtn'] == null) ? '1' : '0',
+          'permissionInfo': BaseService.profile.isSystem == true ? '【${objectItem.progid}】【desktopUISettingBtn】' : '',
+        }
+    );
   }
 
 
@@ -445,108 +479,147 @@ class MesTaskController
     ProgressDialogUtil.showProgressDialog(msg: '正在返回扫描结果');
 
     searchString = getBarCodePrefix(searchString, objectItem.attributeList);
-    List<String> list = searchString.split('|');
-    if (list.length < 3){
-      ToastNotification(Get.overlayContext!).warn('条码错误，请检查设置的默认条码格式！');
-      isLoading = false;
-      ProgressDialogUtil.close();
-      return;
-    }
-    switch (list[1]){
-      case 'T':
-        //region 工序条码 610001
-        if (list.length == 4){
-          if (list[2] == '610001'){
-            scanQueryDataOnChanged(keyWord: 'MoOpId', keyValue: list[3]);
-            res = await pageChanged(showLoading: false);
-          }
-          else {
-            ToastNotification(Get.overlayContext!).warn('条码错误！');
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-        }
-        else {
-          ToastNotification(Get.overlayContext!).warn('条码错误！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        //endregion
-        break;
-      case 'F':
-        //region 生产任务单条码 610001；生产派工单条码 650011
-        if (list.length == 4){
-          if (list[2] == '610001'){
-            scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: list[3]);
-            res = await pageChanged(showLoading: false);
-          }
-          else if (list[2] == '650011'){
-            scanQueryDataOnChanged(keyWord: 'keyValue', keyValue: list[3]);
-            dataListPageConfig;
-            res = await pageChanged(showLoading: false);
-          }
-          else {
-            ToastNotification(Get.overlayContext!).warn('条码错误！');
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-        }
-        else {
-          ToastNotification(Get.overlayContext!).warn('条码错误！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        //endregion
-        break;
-      case 'IP':
-        //region 员工卡号
-        String idCode = list[2];
-        var psnRes = await PersonRepository().getFormData('', '', {'IdCode': idCode}, 0);
-        if (!psnRes.isSuccess){
-          ToastNotification(Get.overlayContext!).warn('获取员工数据时出错：${psnRes.message}！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (psnRes.data.personID.isEmpty){
-          ToastNotification(Get.overlayContext!).warn('查询不到该员工！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        scanQueryDataOnChanged(keyWord: 'EmploeeId', keyValue: psnRes.data.personID);
-        res = await pageChanged(pageIndex: 1, showLoading: false);
-        //endregion
-        break;
-      case 'G':
-        //region 员工条码
-        String psnNum = list[2];
-        var psnRes = await PersonRepository().getFormData('', '', {'PsnNum': psnNum}, 0);
-        if (!psnRes.isSuccess){
-          ToastNotification(Get.overlayContext!).warn('获取员工数据时出错：${psnRes.message}！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (psnRes.data.personID.isEmpty){
-          ToastNotification(Get.overlayContext!).warn('查询不到该员工！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        scanQueryDataOnChanged(keyWord: 'EmploeeId', keyValue: psnRes.data.personID);
-        res = await pageChanged(pageIndex: 1, showLoading: false);
-        //endregion
-        break;
-      default:
-        ToastNotification(Get.overlayContext!).warn('条码错误！');
+    ///$10#H10-3900050$80#1500
+    ///$10#H10-3900050$11#b9edd271-9239-4538-a591-023e10e74848
+    ///$10#H10-3900050$11#77325061-44fd-494a-a588-aff809c16870
+    if (searchString.substring(0, 1) == r'$'){
+      ///该条码查询独立于其他条件查询
+      ApiResult<PageResult<MoTaskModel>> res = await splitBy$BarcodeCheckTask<PageResult<MoTaskModel>>(
+        searchString,
+        extraParams: {
+          'progid': progId,
+        },
+        rows: dataListPageConfig.rows,
+        sidx: dataListPageConfig.sidx,
+      );
+      if (!res.isSuccess){
+        ToastNotification(Get.overlayContext!).warn('${res.info}');
         isLoading = false;
         ProgressDialogUtil.close();
         return;
+      }
+      dataList.clear();
+      dataList.addAll(res.data!.rows);
+      total = res.data!.records ?? 0;
+      totalPage = res.data!.total ?? 0;
+      nowPage = res.data!.page ?? 0;
+      isDataByScan = true;
+      isLoading = false;
+      update();
+      ProgressDialogUtil.update(value: 1);
+      ///如果只有一条数据，则判断是否需要直接进入报工页面
+      if (dataList.length == 1){
+        bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+        if (isEnterDetailAfterSearch){
+          await ProgressDialogUtil.awaitCompletionDelay();
+          enterDetail(dataList[0]);
+        }
+      }
+      return;
+    }
+    else {
+      List<String> list = searchString.split('|');
+      if (list.length < 3){
+        ToastNotification(Get.overlayContext!).warn('条码错误，请检查设置的默认条码格式！');
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return;
+      }
+      switch (list[1]){
+        case 'T':
+          //region 工序条码 610001
+          if (list.length == 4){
+            if (list[2] == '610001'){
+              scanQueryDataOnChanged(keyWord: 'MoOpId', keyValue: list[3]);
+              res = await pageChanged(showLoading: false);
+            }
+            else {
+              ToastNotification(Get.overlayContext!).warn('条码错误！');
+              isLoading = false;
+              ProgressDialogUtil.close();
+              return;
+            }
+          }
+          else {
+            ToastNotification(Get.overlayContext!).warn('条码错误！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          //endregion
+          break;
+        case 'F':
+          //region 生产任务单条码 610001；生产派工单条码 650011
+          if (list.length == 4){
+            if (list[2] == '610001'){
+              scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: list[3]);
+              res = await pageChanged(showLoading: false);
+            }
+            else if (list[2] == '650011'){
+              scanQueryDataOnChanged(keyWord: 'keyValue', keyValue: list[3]);
+              res = await pageChanged(showLoading: false);
+            }
+            else {
+              ToastNotification(Get.overlayContext!).warn('条码错误！');
+              isLoading = false;
+              ProgressDialogUtil.close();
+              return;
+            }
+          }
+          else {
+            ToastNotification(Get.overlayContext!).warn('条码错误！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          //endregion
+          break;
+        case 'IP':
+          //region 员工卡号
+          String idCode = list[2];
+          var psnRes = await PersonRepository().getFormData('', '', {'IdCode': idCode}, 0);
+          if (!psnRes.isSuccess){
+            ToastNotification(Get.overlayContext!).warn('获取员工数据时出错：${psnRes.message}！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (psnRes.data.personID.isEmpty){
+            ToastNotification(Get.overlayContext!).warn('查询不到该员工！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          scanQueryDataOnChanged(keyWord: 'EmploeeId', keyValue: psnRes.data.personID);
+          res = await pageChanged(pageIndex: 1, showLoading: false);
+          //endregion
+          break;
+        case 'G':
+          //region 员工条码
+          String psnNum = list[2];
+          var psnRes = await PersonRepository().getFormData('', '', {'PsnNum': psnNum}, 0);
+          if (!psnRes.isSuccess){
+            ToastNotification(Get.overlayContext!).warn('获取员工数据时出错：${psnRes.message}！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (psnRes.data.personID.isEmpty){
+            ToastNotification(Get.overlayContext!).warn('查询不到该员工！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          scanQueryDataOnChanged(keyWord: 'EmploeeId', keyValue: psnRes.data.personID);
+          res = await pageChanged(pageIndex: 1, showLoading: false);
+          //endregion
+          break;
+        default:
+          ToastNotification(Get.overlayContext!).warn('条码错误！');
+          isLoading = false;
+          ProgressDialogUtil.close();
+          return;
+      }
     }
 
     isDataByScan = true;
@@ -563,6 +636,7 @@ class MesTaskController
   void scanQueryDataOnChanged({String? keyWord, String? keyValue}) {
     dataListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
+      ///如果是扫码查询的话，todo
       dataListPageConfig.queryData![keyWord] = keyValue;
     }
   }
@@ -619,6 +693,9 @@ class MesTaskController
       case '${AppConfig.mesTaskBtn}-${AppConfig.expanded}':
         taskItemExpandedOnChanged(item);
         break;
+      case '${AppConfig.mesTaskBtn}-${AppConfig.transferOrder}':
+        await transferTask(item);
+        break;
     }
   }
 
@@ -639,6 +716,9 @@ class MesTaskController
       case '${AppConfig.mesTaskBtn}-${AppConfig.suspendTask}':
         isShow = (item.sign ?? 0) >= MoTaskSign.scz.sign && (item.sign ?? 0) < MoTaskSign.ysc.sign;
         break;
+      case '${AppConfig.mesTaskBtn}-${AppConfig.transferOrder}':
+        isShow = (item.sign ?? 0) == MoTaskSign.ygq.sign;
+        break;
     }
     return isShow;
   }
@@ -653,15 +733,7 @@ class MesTaskController
   Future<void> itemOnTap(MoTaskModel item) async{  }
 
   Future<void> itemOnDoubleTap(MoTaskModel item) async{
-    Get.rootDelegate.toNamed(
-        AppRoutes.MES_TASK_DETAIL_MAIN_PAGE,
-        arguments: item,
-        parameters: {
-          'key': item.taskId,
-          'keyName': 'task',
-          'taskOpenType': '0',
-        }
-    );
+    enterDetail(item);
   }
 
   Future<void> itemOnLongPress(MoTaskModel item) async{  }
@@ -723,15 +795,45 @@ class MesTaskController
       isLoading = false;
       return;
     }
-    var dialogRes = await DialogUtils.showConfirmationDialog(
-      Get.context!, msg: '确认开工？',
+    var dialogRes = await DialogUtils.showCustomDialog<TransferOrderController, Map<String, String?>>(
+      Get.context!,
+      title: '确认开工？',
+      onConfirmName: '确认',
       barrierDismissible: false,
+      initialWidth: 550, initialHeight: 290,
+      contentPadding: const EdgeInsets.all(12),
+      content: TransferOrderView(),
+      controller: TransferOrderController(
+        initPsnId: item.emploeeId,
+        initDeviceId: item.deviceId,
+        initDeviceCode: item.deviceCode,
+        initDeviceName: item.deviceName,
+      ),
     );
-    if (dialogRes == null || !dialogRes){
+    if (dialogRes == null){
       isLoading = false;
       return;
     }
     ProgressDialogUtil.showProgressDialog(max: 2, msg: '正在提交开工数据', completedMsg: '数据刷新成功！');
+    //region 切换员工、设备
+    if ((item.emploeeId ?? '') != (dialogRes['psnId'] ?? '')
+        || (item.deviceId ?? '') != (dialogRes['deviceId'] ?? '')){
+      var res = await MoTaskRepository().updateEntity(item.taskId, {
+        'EmploeeId': dialogRes['psnId'],
+        'DeviceId': dialogRes['deviceId']
+      });
+      if (!res.isSuccess){
+        ToastNotification(Get.overlayContext!).error('员工、设备更新失败，请重试：${res.message}！');
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return;
+      }
+      item.emploeeId = dialogRes['psnId'];
+      item.deviceId = dialogRes['deviceId'];
+      item.deviceCode = dialogRes['deviceCode'];
+      item.deviceName = dialogRes['deviceName'];
+    }
+    //endregion
     //region 开工
     var res = await MoProcessTaskRepository().shiftMoProcessTask(item.taskId);
     if (!res.isSuccess){
@@ -869,6 +971,67 @@ class MesTaskController
     ProgressDialogUtil.update(value: 2);
     //endregion
     update();
+    isLoading = false;
+  }
+
+  ///转单
+  Future<void> transferTask(MoTaskModel item) async{
+    if (isLoading){
+      ToastNotification(Get.overlayContext!).warn('正在执行！');
+      return;
+    }
+    isLoading = true;
+    if ((item.sign ?? 0) != MoTaskSign.ygq.sign){
+      ToastNotification(Get.overlayContext!).warn('只有[已挂起]的单据才能转单！');
+      isLoading = false;
+      return;
+    }
+    if ((item.assignQty ?? 0) - (item.qualifiedQty ?? 0) <= 0){
+      ToastNotification(Get.overlayContext!).warn('没有可生产的数量,不能转单!');
+      isLoading = false;
+      return;
+    }
+
+    var dialogRes = await DialogUtils.showCustomDialog<TransferOrderController, Map<String, String?>>(
+      Get.context!,
+      title: '确认转单？',
+      onConfirmName: '确认',
+      barrierDismissible: false,
+      initialWidth: 550, initialHeight: 290,
+      contentPadding: const EdgeInsets.all(12),
+      content: TransferOrderView(),
+      controller: TransferOrderController(
+        initPsnId: item.emploeeId,
+        initDeviceId: item.deviceId,
+        initDeviceCode: item.deviceCode,
+        initDeviceName: item.deviceName,
+      ),
+    );
+    if (dialogRes == null){
+      isLoading = false;
+      return;
+    }
+    ProgressDialogUtil.showProgressDialog(max: 2, msg: '正在提交转单数据', completedMsg: '数据刷新成功！');
+    //region 转单
+    MoTaskEntity entity = MoTaskEntity.fromJson(item.toJson());
+    entity.emploeeId = dialogRes['psnId'];
+    entity.deviceId = dialogRes['deviceId'];
+    entity.assignQty = (item.assignQty ?? 0) - (item.submitQty ?? 0);
+    var res = await MoPMESTaskRepository().transTask(item.taskId, entity);
+    if (!res.isSuccess){
+      ToastNotification(Get.overlayContext!).error('转单失败！${res.message}！');
+      isLoading = false;
+      ProgressDialogUtil.close();
+      return;
+    }
+    ProgressDialogUtil.update(value: 1, msg: '转单成功，正在刷新数据');
+    //endregion
+
+    //region 数据刷新
+    await pageChanged(showLoading: false);
+    update();
+    ProgressDialogUtil.update(value: 2);
+    //endregion
     isLoading = false;
   }
 

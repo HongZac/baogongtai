@@ -79,7 +79,7 @@ class ShutdownRecordController
 
   void onInit() {
     super.onInit();
-    dataListPageConfig.sidx = 'ProcessDate';
+    dataListPageConfig.sidx = 'ProcessTime'; //'ProcessDate';
     dataListPageConfig.sord = 'desc';
     dataListPageConfig.rows = 7;
     dataListPageConfig.queryData = {
@@ -175,7 +175,7 @@ class ShutdownRecordController
         processType: item.processType.toString(),
         desc: item.description,
         operatorId: item.operator,
-        processId: item.processId ?? '',
+        processId: item.processId!,
       ),
     );
 

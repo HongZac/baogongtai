@@ -132,13 +132,13 @@ class MesTaskDetailTabController extends BaseTabController{
     '次品录入',
     '材料不良',
     '次品列表',
-    // '报工扫码'
   ];
 
   @override
   late final List<Widget> tabPageView = [
     if (taskOpenType == 1)
       MesDeviceTaskDetailPage(),
+
     MesTaskSubmitPage(),
     MesSubmitListPage(),
     MesTaskCheckRecordPage(),

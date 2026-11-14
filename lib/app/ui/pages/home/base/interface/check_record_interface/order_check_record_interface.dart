@@ -44,7 +44,7 @@ on CheckRecordInterface, MesCheckRecordInterface {
   ///通过扫码得到的产品序列号列表；
   ///key：产品序列号；
   ///
-  ///value：是否成功写入到报工数据中
+  ///value：是否成功写入到次品数据中
   ///
   ///200：成功；
   ///
@@ -56,9 +56,9 @@ on CheckRecordInterface, MesCheckRecordInterface {
   ///
   ///4：该序列号未被分配到该任务单，失败；
   ///
-  ///5：该序列号对应的工序已报工，失败；
+  ///5：该序列号对应的工序已报次品，失败；
   ///
-  ///6： 不允许超上道报工，失败；
+  ///6： 不允许超上道报次品，失败；
   ///
   ///7： 该序列号已失效（报废），失败；
   final Map<String, int> serialNumberBarcodeMap = {};
@@ -121,8 +121,8 @@ on CheckRecordInterface, MesCheckRecordInterface {
         '${fail2List.isEmpty ? '' : '从服务器中获取数据时出错：${fail2List.join(',')}\n'}'
         '${fail3List.isEmpty ? '' : '查询不到该序列号：${fail3List.join(',')}\n'}'
         '${fail4List.isEmpty ? '' : '未被分配任务单：${fail4List.join(',')}\n'}'
-        '${fail5List.isEmpty ? '' : '对应的工序已报工的序列号：${fail5List.join(',')}\n'}'
-        '${fail6List.isEmpty ? '' : '不允许超上道报工：${fail6List.join(',')}\n'}'
+        '${fail5List.isEmpty ? '' : '对应的工序已报次品的序列号：${fail5List.join(',')}\n'}'
+        '${fail6List.isEmpty ? '' : '不允许超上道报次品：${fail6List.join(',')}\n'}'
         '${fail7List.isEmpty ? '' : '该序列号已失效（报废）：${fail7List.join(',')}\n'}';
   }
   //endregion
@@ -225,10 +225,15 @@ on CheckRecordInterface, MesCheckRecordInterface {
   @override
   Future<void> psnOnChanged(List<PickerDataModel> list, {bool isPostNeedChanged = true}) async{
     await super.psnOnChanged(list);
-    if (processAdapter != null && isPostNeedChanged) {
-      ///选中当前生产人员的岗位（默认取前7个员工的数据）
+    if (isPostNeedChanged){
+      await _getPostAndProcessByPsn(list);
+    }
+    update();
+  }
+  Future<void> _getPostAndProcessByPsn(List<PickerDataModel> psnList) async {
+    if (processAdapter != null){
       List<String> postIdList = [];
-      List<PickerDataModel> personList = list.length > 7 ? list.sublist(0, 7) : list;
+      List<PickerDataModel> personList = psnList.length > 7 ? psnList.sublist(0, 7) : psnList;
       for (var element in personList){
         var res = await PersonRepository().getPostList(element.id);
         if (!res.isSuccess){
@@ -241,8 +246,10 @@ on CheckRecordInterface, MesCheckRecordInterface {
       await processAdapter?.postAdapter?.validModelValue(postIdList.join(','));
       await _postOnChanged(postIdList.map((e) => PickerDataModel(id: e)).toList());
     }
-    update();
   }
+  ///选中当前生产人员的岗位（默认取前7个员工的数据）
+  Future<void> Function(List<PickerDataModel> psnList) get getPostAndProcessByPsn => _getPostAndProcessByPsn;
+
 
   ///岗位选择变化（该函数用于[processAdapter.postAdapter]）
   Future<void> _postOnChanged(List<PickerDataModel> list) async {
@@ -373,6 +380,9 @@ on CheckRecordInterface, MesCheckRecordInterface {
       checkRecordModel.productDate = DateTime.now();
       checkRecordModel.depId = getDepIdByDepGetWayIndex();
       checkRecordModel.depCode = getDepCodeByDepGetWayIndex();
+      ///数据初始化时，先不写入员工数据
+      //checkRecordModel.empId = BaseService.profile.objId;
+      //checkRecordModel.emploee = BaseService.profile.realName;
       checkRecordModel.serialNumber = orderModel.orderSN;
       if (wcDataReportType == 1){
         checkRecordModel.wcId = workCenterId;
@@ -455,6 +465,7 @@ on CheckRecordInterface, MesCheckRecordInterface {
       }
       await _getProcessAdapter();
       await getREProcessAdapter(wbId: orderModel.wbId, invId: orderModel.productId);
+      ///如果切换任务单，不需要重新获取员工数据，但是需要重新筛选岗位、工序数据
       await _postOnChanged(postIdList.map((e) => PickerDataModel(id: e)).toList());
       await _getOrderSNAdapter();
       if (comDefectAdapter == null
@@ -533,6 +544,14 @@ on CheckRecordInterface, MesCheckRecordInterface {
   ///次品记录提交成功后，刷新数据填报区域的数据
   Future<void> _resetCheckRecordDataAfterSave() async {
     await super.resetCheckRecordDataAfterSave();
+    ///报次品完成后，如果不需要写入历史选中的员工数据，且当前登录账号没有对应员工数据，则清空员工数据
+    if (!isSaveTheLastSelectedPsnId
+        && (BaseService.profile.objId == null || BaseService.profile.objId!.isEmpty)){
+      checkRecordModel.empId = null;
+      checkRecordModel.emploee = null;
+      personAdapter?.clearSelection();
+      personList.clear();
+    }
     checkRecordModel.workBillEntryId = null;
     checkRecordModel.opId = null;
     checkRecordModel.opName = null;

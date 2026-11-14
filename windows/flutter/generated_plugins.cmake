@@ -4,12 +4,10 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
-  flutter_libserialport
   flutter_platform_alert
   flutter_tts
   printing
   screen_retriever_windows
-  syncfusion_pdfviewer_windows
   unique_device_identifier
   url_launcher_windows
   window_manager

@@ -118,7 +118,7 @@ on InvClassFrxNameInterface, GetxController{
         }
         String url = AddressService.getUrl(barcodeRes.data);
         Printer? printer = Printer(url: printerUrl, name: printerName);
-        Uint8List printContent = await DioService.downLoadFile(url);
+        Uint8List printContent = await DioService().downLoadFile(url);
         if (printContent.isEmpty){
           return {false: '打印失败！'};
         }

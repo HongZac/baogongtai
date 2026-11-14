@@ -237,6 +237,11 @@ abstract class AppRoutes {
   ///远程云消息
   static const CLOUD_SERVICE_TASK_PAGE = RoutePath.HOME + RoutePath.CLOUD_SERVICE_TASK;
 
+  //region INVENTORY_ATTACH
+  ///产品图纸（附件、图片）查询
+  static const INVENTORY_ATTACH_PAGE = RoutePath.HOME + RoutePath.INVENTORY_ATTACH;
+  //endregion
+
   static const SETTING = RoutePath.HOME + RoutePath.SETTING; //全局设置页面
 
 }
@@ -313,4 +318,6 @@ abstract class RoutePath {
   ///远程云消息
   static const CLOUD_SERVICE_TASK = '/CloudServiceTask';
 
+  ///产品图纸（附件、图片）查询
+  static const INVENTORY_ATTACH = '/InventoryAttach';
 }

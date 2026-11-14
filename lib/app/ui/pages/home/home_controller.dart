@@ -36,7 +36,6 @@ import 'package:desktop/app/ui/widget/fluent_ui/command_bars/command_bar.dart';
 import 'package:desktop/app/ui/widget/fluent_ui/command_bars/flyout.dart';
 import 'package:desktop/app/ui/widget/fluent_ui/command_bars/menu.dart';
 import 'package:desktop/app/ui/widget/mine_icon_button.dart';
-import 'package:desktop/app/ui/widget/scan_gun/scan_gun_listener_widget.dart';
 import 'package:desktop/app/utils/app_config.dart';
 import 'package:desktop/app/utils/dialog_utils.dart';
 import 'package:desktop/app/utils/restsart_desktop_util.dart';
@@ -238,6 +237,10 @@ class HomeController extends GetxController {
   late final DateTime appRestartTimeDate;
   //endregion
 
+  ///是否显示Dio网络日志接口
+  late final bool showDioLogger = dataService.clientSettings['dio'] != null && (CryptoUtils.extraMd5CryptStr('.${dataService.companyName}.dio') == dataService.clientSettings['dio']);
+
+
 
   @override
   void onInit(){
@@ -256,6 +259,7 @@ class HomeController extends GetxController {
       dateTime = dateTime.add(Duration(days: 1));
     }
     appRestartTimeDate = dateTime;
+
     update();
   }
 
@@ -286,6 +290,7 @@ class HomeController extends GetxController {
         'home.navigate.mes.base.workCenter': Icons.precision_manufacturing,
         'home.navigate.tm.invBarcode': FluentIcons.qr_code_28_filled,
         'home.navigate.cloudServiceTask': FluentIcons.cloud_swap_24_filled,
+        'home.navigate.inventoryAttach': Icons.picture_as_pdf_outlined,
       };
       destinationMap.forEach((key, value) {
         destinations.add(ChoiceChipModel(
@@ -416,6 +421,8 @@ class HomeController extends GetxController {
         return AppRoutes.INV_BARCODE_PAGE;
       case 'home.navigate.cloudServiceTask':
         return AppRoutes.CLOUD_SERVICE_TASK_PAGE;
+      case 'home.navigate.inventoryAttach':
+        return AppRoutes.INVENTORY_ATTACH_PAGE;
       default:
         return AppRoutes.EMPTY_PAGE;
     }

@@ -37,7 +37,6 @@ class ScanGunListenerWidget extends StatefulWidget {
 
 
   ScanGunListenerWidget({
-    super.key,
     this.child,
     this.bufferDuration = _hundredMs,
     this.tag = '',
@@ -51,7 +50,6 @@ class ScanGunListenerWidget extends StatefulWidget {
     this.useKeyDownEvent = true,
     this.suffixType = SuffixType.enter,
   });
-
 
   @override
   ScanGunListenerState createState() => ScanGunListenerState();
@@ -77,7 +75,6 @@ class ScanGunListenerState extends State<ScanGunListenerWidget>{
   late final String _suffix;
 
 
-
   @override
   void initState() {
     super.initState();
@@ -96,7 +93,6 @@ class ScanGunListenerState extends State<ScanGunListenerWidget>{
     HardwareKeyboard.instance.addHandler(_keyBoardCallback);
     _keyboardSubscription = _controller.stream.listen(onKeyEvent);
   }
-
 
   bool _keyBoardCallback(KeyEvent keyEvent) {
     try {
@@ -218,6 +214,10 @@ class ScanGunListenerState extends State<ScanGunListenerWidget>{
               showCursor: true,
               cursorColor: Theme.of(context).navigationRailTheme.unselectedLabelTextStyle!.color,
               keyboardType: TextInputType.none,
+              //keyboardType: TextInputType.visiblePassword,  // 降低被 IME 接管的概率
+              //autocorrect: false,
+              //enableSuggestions: false,
+              //enableIMEPersonalizedLearning: false,         // 别让输入法学条码
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                 color: Theme.of(context).navigationRailTheme.unselectedLabelTextStyle!.color,
               ),

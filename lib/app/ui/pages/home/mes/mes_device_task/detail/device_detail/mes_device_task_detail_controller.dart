@@ -578,6 +578,7 @@ class MesDeviceTaskDetailController
   void scanQueryDataOnChanged({String? keyWord, String? keyValue}) {
     taskListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
+      ///如果是扫码查询的话，todo
       taskListPageConfig.queryData![keyWord] = keyValue;
     }
   }

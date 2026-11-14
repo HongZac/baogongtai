@@ -28,6 +28,13 @@ class EditFieldController extends BaseDialogController {
 
 
   @override
+  void onReady() {
+    super.onReady();
+    fn.requestFocus();
+  }
+
+
+  @override
   Future<DialogReturnDataModel> dialogActionPressed(DialogButtonActionEnum actionName) async{
     if (actionName == DialogButtonActionEnum.confirm){
       bool res = await beforeConfirmCallback?.call(tc.text) ?? true;

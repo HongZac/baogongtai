@@ -3,11 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_libserialport
   flutter_platform_alert
   printing
   screen_retriever_linux
-  syncfusion_pdfviewer_linux
   unique_device_identifier
   url_launcher_linux
   window_manager

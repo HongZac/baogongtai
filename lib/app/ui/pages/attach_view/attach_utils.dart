@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:basement/basement.dart';
 import 'package:basement/model.dart';
 import 'package:basement/service.dart';
+import 'package:basement/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:desktop/app/model/pdf_controller_with_key_model.dart';
 import 'package:desktop/app/theme/app_colors.dart';
@@ -13,8 +15,9 @@ import 'package:desktop/app/utils/toast_notification.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:printing/printing.dart';
+import 'package:pdfrx/pdfrx.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:ui' as ui;
 
 
 class AttachUtils {
@@ -189,18 +192,60 @@ class AttachUtils {
     PdfControllerWithKeyModel pdfControllerWithKeyModel = PdfControllerWithKeyModel(
       keyName: key,
       imageUint8List: Uint8List(0),
+      uint8listForAllPage: Uint8List(0),
     );
     Uint8List uint8listForAllPage = await DioService.downLoadFile(AddressService.getUrl(url));
+    Uint8List uint8list;
     if (uint8listForAllPage.isNotEmpty){
-      var list = Printing.raster(uint8listForAllPage, pages: [0], dpi: 72);
-      var firstPage = await list.first;
-      Uint8List uint8list = await firstPage.toPng();
+      PdfDocument? document;
+      PdfImage? pageImage;
+      try {
+        document = await PdfDocument.openData(
+          uint8listForAllPage,
+          sourceName: 'attach-preview-$key-${DateTime.now().microsecondsSinceEpoch}',
+          useProgressiveLoading: false,
+        );
+        if (document.pages.isEmpty) {
+          uint8list = Uint8List(0);
+        }
+        else {
+          pageImage = await document.pages.first.render();
+          uint8list = pageImage == null
+              ? Uint8List(0)
+              : await _pdfImageToPng(pageImage);
+        }
+      } catch (e){
+        PrintUtil.printDebug(e.toString());
+        uint8list = Uint8List(0);
+      } finally {
+        pageImage?.dispose();
+        await document?.dispose();
+      }
       pdfControllerWithKeyModel = PdfControllerWithKeyModel(
         keyName: key,
         imageUint8List: uint8list,
+        uint8listForAllPage: uint8listForAllPage,
       );
     }
     return pdfControllerWithKeyModel;
+  }
+
+  Future<Uint8List> _pdfImageToPng(PdfImage pdfImage) async {
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromPixels(
+      pdfImage.pixels,
+      pdfImage.width,
+      pdfImage.height,
+      ui.PixelFormat.bgra8888,
+      completer.complete,
+    );
+    final image = await completer.future;
+    try {
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List() ?? Uint8List(0);
+    } finally {
+      image.dispose();
+    }
   }
 
 }

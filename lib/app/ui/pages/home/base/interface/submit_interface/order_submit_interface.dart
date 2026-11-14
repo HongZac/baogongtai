@@ -130,10 +130,16 @@ on SubmitInterface, MesSubmitInterface {
   @override
   Future<void> psnOnChanged(List<PickerDataModel> list, {bool isPostNeedChanged = true}) async{
     await super.psnOnChanged(list);
-    if (processAdapter != null && isPostNeedChanged){
-      ///选中当前生产人员的岗位（默认取前7个员工的数据）
+    if (isPostNeedChanged){
+      await _getPostAndProcessByPsn(list);
+    }
+    update();
+  }
+  ///选中当前生产人员的岗位（默认取前7个员工的数据）
+  Future<void> _getPostAndProcessByPsn(List<PickerDataModel> psnList) async {
+    if (processAdapter != null){
       List<String> postIdList = [];
-      List<PickerDataModel> personList = list.length > 7 ? list.sublist(0, 7) : list;
+      List<PickerDataModel> personList = psnList.length > 7 ? psnList.sublist(0, 7) : psnList;
       for (var element in personList){
         var res = await PersonRepository().getPostList(element.id);
         if (!res.isSuccess){
@@ -146,8 +152,9 @@ on SubmitInterface, MesSubmitInterface {
       await processAdapter?.postAdapter?.validModelValue(postIdList.join(','));
       await _postOnChanged(postIdList.map((e) => PickerDataModel(id: e)).toList());
     }
-    update();
   }
+  ///选中当前生产人员的岗位（默认取前7个员工的数据）
+  Future<void> Function(List<PickerDataModel> psnList) get getPostAndProcessByPsn => _getPostAndProcessByPsn;
 
   ///岗位选择变化（该函数用于[processAdapter.postAdapter]）
   Future<void> _postOnChanged(List<PickerDataModel> list) async {
@@ -374,6 +381,9 @@ on SubmitInterface, MesSubmitInterface {
       submitModel.billDate = DateTime.now();
       submitModel.depId = getDepIdByDepGetWayIndex();
       submitModel.depCode = getDepCodeByDepGetWayIndex();
+      ///数据初始化时，先不写入员工数据
+      //submitModel.empId = BaseService.profile.objId;
+      //submitModel.emploee = BaseService.profile.realName;
       submitModel.serialNumber = orderModel.orderSN;
       if (wcDataReportType == 1){
         submitModel.wcId = workCenterId;
@@ -416,7 +426,7 @@ on SubmitInterface, MesSubmitInterface {
         await getTeam();
         update();
       });
-      _getProcessAdapter().then((value) {
+      _getProcessAdapter().then((value) async {
         update();
       });
       getOrderSNAdapter().then((value) {
@@ -466,6 +476,7 @@ on SubmitInterface, MesSubmitInterface {
         }
       }
       await _getProcessAdapter();
+      ///如果切换任务单，不需要重新获取员工数据，但是需要重新筛选岗位、工序数据
       await _postOnChanged(postIdList.map((e) => PickerDataModel(id: e)).toList());
       await getOrderSNAdapter();
       if (isUsePackingPicker){
@@ -570,6 +581,14 @@ on SubmitInterface, MesSubmitInterface {
   ///报工提交成功后，刷新报工填报区域的数据
   Future<void> _resetSubmitDataAfterSave({bool byAutoSubmit = false}) async {
     await super.resetSubmitDataAfterSave();
+    ///报工完成后，如果不需要写入历史选中的员工数据，且当前登录账号没有对应员工数据，则清空员工数据
+    if (!isSaveTheLastSelectedPsnId
+        && (BaseService.profile.objId == null || BaseService.profile.objId!.isEmpty)){
+      submitModel.empId = null;
+      submitModel.emploee = null;
+      personAdapter?.clearSelection();
+      personList.clear();
+    }
     if (/*!byAutoSubmit*/submitType != AppConfig.serialNumberSubmit
         && submitType != AppConfig.singleBoxSerialNumberSubmit){
       submitModel.workBillEntryId = null;

@@ -162,6 +162,13 @@ class MesOrderSettingPage extends BaseSettingPage<MesOrderSettingController>{
                       controller.pageConfigRowsOnChanged(index);
                     }
                 ),
+                controller.enterDetailAfterSearchSettingWidget(
+                  context,
+                  isEnterDetailAfterSearch: _.isEnterDetailAfterSearch,
+                  isEnterDetailAfterSearchOnChanged: () {
+                    controller.isEnterDetailAfterSearchOnChanged();
+                  },
+                ),
               ],
             ),
           )

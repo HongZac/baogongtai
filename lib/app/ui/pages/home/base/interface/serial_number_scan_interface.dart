@@ -51,7 +51,7 @@ on BaseFormController,
       return;
     }
 
-   /* ///判断装箱情况
+    ///判断装箱情况
     if (submitType == AppConfig.singleBoxSerialNumberSubmit){
       String singleBoxQtyString = NumPadUtil().getText(NumPadUtil.singleBoxQty, numPadCTList) ?? '';
       int? singleBoxQty = int.tryParse(singleBoxQtyString);
@@ -81,7 +81,7 @@ on BaseFormController,
         _isLoading = false;
         return;
       }
-    } */
+    }
 
     String string; ///解析后的生产序列号条码
     if (searchString.substring(0, 1) != '|') {
@@ -220,7 +220,6 @@ on BaseFormController,
         }
         await orderSNAdapter?.validViewValue([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
         orderSNOnChanged([orderSNModel ?? MoOrderSNModel(id: string, code: string)]);
-
         if (autoCommitSubmit){
           ///此时所有报工数据都已填写完成，符合自动报工的条件，直接提交报工记录
           update();
@@ -251,8 +250,7 @@ on BaseFormController,
       List<MoOrderSNModel> list = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
       list.add(orderSNModel ?? MoOrderSNModel(id: string, code: string));
       await orderSNAdapter?.validViewValue(list);
-      submitSNOnChanged(list);
-
+      orderSNOnChanged(list);
       if (singleBoxSerialNumberSubmitAutoCommit){
         ///数量符合，可以执行自动提交
         ///报工提交前检查，未通过则退出

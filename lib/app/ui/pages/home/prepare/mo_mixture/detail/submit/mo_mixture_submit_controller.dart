@@ -212,6 +212,7 @@ class MoMixtureSubmitController
     getNumberTC();
     //endregion
     if (isOtherPageNeedChanged){
+      ToastNotification(Get.overlayContext!).info('拌料单已切换！');
       if (moMixtureDetailTabController != null){
         moMixtureDetailTabController!.mixtureModel = item;
         moMixtureDetailTabController!.moMixtureId = item.moMixtureId ?? '';

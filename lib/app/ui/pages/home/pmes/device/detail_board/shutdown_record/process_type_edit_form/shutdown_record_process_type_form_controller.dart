@@ -33,7 +33,9 @@ class ShutdownRecordProcessTypeFormController extends BaseFormController {
 
   PersonAdapter? personAdapter;
 
-  final String processId;
+  ///如果为空，则代表当前停机记录还未提交；
+  ///点击原因提交时，不需要执行 api 接口操作，只需要返回当前阳明选中的参数即可 [Map<String, dynamic> dataMap]
+  final String? processId;
   String? processType;
   String? operatorId;
   String? operatorName;
@@ -196,10 +198,9 @@ class ShutdownRecordProcessTypeFormController extends BaseFormController {
     return DialogReturnDataModel(isCanCloseDialog: true);
   }
 
-  Future<ApiResult<String?>> onSave() async {
+  Future<ApiResult<dynamic>> onSave() async {
     if (isLoading) {
-      ToastNotification(Get.overlayContext!).warn('正在提交！',
-      );
+      ToastNotification(Get.overlayContext!).warn('正在提交！');
       return ApiResult();
     }
     isLoading = true;
@@ -210,25 +211,42 @@ class ShutdownRecordProcessTypeFormController extends BaseFormController {
       return ApiResult();
     }
     //endregion
-    ProgressDialogUtil.showProgressDialog(msg: '正在提交全场呼叫', completedMsg: '全场呼叫提交成功！');
     Map<String, dynamic> dataMap = {
       'ProcessType': int.tryParse(processType!),
       'Operator': operatorId,
       'OperateDate': DateTime.now().toString(),
       'Description': desc,
     };
-    var res = await MoProcessRepository().feedbackReason(processId, dataMap);
-    if (!res.isSuccess){
-      ToastNotification(Get.overlayContext!).warn('停机原因提交失败！${res.message}！');
-      isLoading = false;
-      ProgressDialogUtil.close();
-      return ApiResult();
+    if (processId == null || processId!.isEmpty){
+      String? processTypeName;
+      for (var list in processTypeTreeListMap.values) {
+        var entity = list.firstWhereOrNull((e) => e.itemValue == processType);
+        if (entity != null){
+          processTypeName = entity.itemName;
+          break;
+        }
+      }
+      dataMap['ProcessTypeName'] = processTypeName;
+      return ApiResult(
+        code: 200,
+        data: dataMap,
+      );
     }
+    else {
+      ProgressDialogUtil.showProgressDialog(msg: '正在提交停机原因', completedMsg: '停机原因提交成功！');
+      var res = await MoProcessRepository().feedbackReason(processId!, dataMap);
+      if (!res.isSuccess){
+        ToastNotification(Get.overlayContext!).warn('停机原因提交失败！${res.message}！');
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return ApiResult();
+      }
 
-    isLoading = false;
-    ProgressDialogUtil.update();
-    await ProgressDialogUtil.awaitCompletionDelay();
-    return res.data;
+      isLoading = false;
+      ProgressDialogUtil.update();
+      await ProgressDialogUtil.awaitCompletionDelay();
+      return res.data;
+    }
   }
 
 

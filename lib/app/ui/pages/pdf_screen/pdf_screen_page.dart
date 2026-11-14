@@ -1,12 +1,11 @@
 import 'package:desktop/app/routes/mine_get_delegate.dart';
-import 'package:desktop/app/ui/pages/home/cloud_service_task/cloud_service_task_controller.dart';
 import 'package:desktop/app/ui/pages/pdf_screen/pdf_screen_controller.dart';
 import 'package:desktop/app/ui/widget/back_outlined_button.dart';
 import 'package:desktop/app/ui/widget/mine_icon_button.dart';
-import 'package:desktop/app/utils/toast_notification.dart';
+import 'package:desktop/app/ui/widget/pdf_view/pdf_view.dart';
+import 'package:desktop/app/ui/widget/pdf_view/pdf_view_data_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 ///PDF的查看和打印页面
 class PdfScreenPage extends GetView<PdfScreenController>{
@@ -62,11 +61,10 @@ class PdfScreenPage extends GetView<PdfScreenController>{
           ),
           const SizedBox(height: 8),
 
-          if (_.pdfUint8List.isNotEmpty)
-            Expanded(
-                child: childWidget(context, _),
-            ),
-        ],
+          Expanded(
+              child: childWidget(context, _),
+          ),
+        ]
       );
     }, initState: (GetBuilderState<PdfScreenController> state){
       MineGetDelegate().pageInitState(controller);
@@ -83,17 +81,9 @@ class PdfScreenPage extends GetView<PdfScreenController>{
       children: [
         MineIconButton(
           onPressed: () async{
-            if (_.turns == 0){
-              _.turns = -3;
+            if (_.pdfViewDataManager != null){
+              _.pdfViewDataManager!.rotate(true);
             }
-            else {
-              _.turns += 1;
-            }
-            controller.update();
-            try {
-              var ctl = Get.find<CloudServiceTaskController>();
-              ctl.update();
-            } catch (e){}
           },
           tooltip: '顺时针旋转',
           icon: Icons.rotate_90_degrees_cw_outlined,
@@ -103,17 +93,9 @@ class PdfScreenPage extends GetView<PdfScreenController>{
 
         MineIconButton(
           onPressed: () async{
-            if (_.turns == -3){
-              _.turns = 0;
+            if (_.pdfViewDataManager != null){
+              _.pdfViewDataManager!.rotate(false);
             }
-            else {
-              _.turns -= 1;
-            }
-            controller.update();
-            try {
-              var ctl = Get.find<CloudServiceTaskController>();
-              ctl.update();
-            } catch (e){}
           },
           tooltip: '逆时针旋转',
           icon: Icons.rotate_90_degrees_ccw_outlined,
@@ -123,7 +105,9 @@ class PdfScreenPage extends GetView<PdfScreenController>{
 
         MineIconButton(
           onPressed: () async{
-            _.pdfViewerController.zoomLevel -= 0.1;
+            if (_.pdfViewDataManager != null){
+              _.pdfViewDataManager!.zoomOnChanged(isZoomOut: true);
+            }
           },
           tooltip: '缩小',
           icon: Icons.zoom_out,
@@ -133,7 +117,9 @@ class PdfScreenPage extends GetView<PdfScreenController>{
 
         MineIconButton(
           onPressed: () async{
-            _.pdfViewerController.zoomLevel += 0.1;
+            if (_.pdfViewDataManager != null){
+              _.pdfViewDataManager!.zoomOnChanged(isZoomOut: false);
+            }
           },
           tooltip: '放大',
           icon: Icons.zoom_in,
@@ -154,24 +140,20 @@ class PdfScreenPage extends GetView<PdfScreenController>{
   }
 
   Widget childWidget(BuildContext context, PdfScreenController _){
-    return RotatedBox(
-      quarterTurns: _.turns,
-      child: SfPdfViewer.memory(
-        _.pdfUint8List,
-        controller: _.pdfViewerController,
-        maxZoomLevel: 1000,
-        initialZoomLevel: 1,
-        initialScrollOffset: const Offset(0, 0),
-        enableDoubleTapZooming: true,
-        canShowPaginationDialog: true,
-        canShowScrollStatus: false,
-        canShowScrollHead: false,
-        interactionMode: PdfInteractionMode.pan,
-        onDocumentLoaded: (a){  },
-        onDocumentLoadFailed: (a){
-          ToastNotification(Get.overlayContext!).error("PDF打开失败！${a.error}！${a.description}！");
-        },
-      )
+    if (!_.isInitData){
+      return const SizedBox.shrink();
+    }
+    return PdfView(
+      pdfFileUint8List: _.pdfUint8List,
+      onLoaded: (PdfViewDataManager pdfViewDataManager) async {
+        ///只有第一次 pdf 加载完成后才需要赋值
+        if (_.pdfViewDataManager == null){
+          _.pdfViewDataManager = pdfViewDataManager;
+          ///在监听前，有些数据可能已经改变，这里先执行 pdfViewDataManagerListener
+          _.pdfViewDataManagerListener();
+          _.pdfViewDataManager!.addListener(_.pdfViewDataManagerListener);
+        }
+      },
     );
   }
 

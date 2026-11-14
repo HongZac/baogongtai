@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:basement/model.dart';
 import 'package:basement/picker.dart';
 import 'package:basement/repository.dart';
+import 'package:basement/service.dart';
 import 'package:basement/utils.dart';
 import 'package:desktop/app/model/choice_chip_model.dart';
 import 'package:desktop/app/model/info_form_model.dart';
@@ -72,6 +73,7 @@ class DeviceSubmitController
     NumPadController(key: NumPadUtil.qty), ///报工总数量
     NumPadController(key: NumPadUtil.weight), ///报工总重(kg)
     NumPadController(key: NumPadUtil.boxWeight), ///箱重（按托报工时使用，员工直接输入，数值 ~= 单箱数量 * 产品实际单重 + 皮重） (kg)
+    NumPadController(key: NumPadUtil.workHours),
   ];
 
   @override
@@ -208,7 +210,7 @@ class DeviceSubmitController
     ///写入历史皮重数据
     if (isSaveTheLastPackingWeightData){
       Future.doWhile(() async {
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(milliseconds: 200));
         ///如果使用装箱容器，需要等待 containerWithNoPageAdapter 被赋值后，再写入历史皮重数据
         if (!isUsePackingPicker || containerWithNoPageAdapter != null){
           await setTheLastPackingWeightData(
@@ -222,6 +224,7 @@ class DeviceSubmitController
                 SharedPreferencesKeys.DEVICE_SUBMIT_THE_LAST_SINGLE_BOX_QTY_VALUE_KEY
             ),
           );
+          update();
           return false;
         }
         return true;
@@ -233,20 +236,48 @@ class DeviceSubmitController
       getPieceWeightBtnOnTap();
     }
 
-    ///写入历史选中的员工数据
-    if (isSaveTheLastSelectedPsnId){
-      Future.doWhile(() async {
-        await Future.delayed(const Duration(seconds: 1));
-        ///需要等待 personAdapter 被赋值后，再写入历史员工数据
-        if (!isPsnHasAdapter || personAdapter != null){
-          await setTheLastSelectedPsnData(
-            ShareStorageUtil.instance?.read(SharedPreferencesKeys.DEVICE_SUBMIT_THE_LAST_SELECTED_PSN_LIST_KEY) ?? [],
-          );
-          return false;
-        }
-        return true;
-      });
+    ///进入报工页面，先不初始化员工
+    ///
+    /// 派工单报工：判断是否需要写入历史选中的员工数据，是，则优先获取本地缓存的员工数据，
+    ///            获取后，如果获取到的员工数据为空，并且当前派工单有员工数据，则取对应员工数据，
+    ///            获取后，如果获取到的员工数据为空，并且当前登录账号有对应员工数据，则取对应员工数据，
+    ///            写入获取到的员工数据；
+    ///
+    ///写入历史选中的员工数据/派工单的员工数据
+    List<dynamic> psnList = [];
+    if (isSaveTheLastSelectedPsnId) {
+      psnList.addAll(ShareStorageUtil.instance?.read(SharedPreferencesKeys.DEVICE_SUBMIT_THE_LAST_SELECTED_PSN_LIST_KEY) ?? []);
     }
+    if (psnList.isEmpty && taskModel.emploeeId != null && taskModel.emploeeId!.isNotEmpty){
+      psnList.add(PersonModel(
+        id: taskModel.emploeeId,
+        personID: taskModel.emploeeId,
+        name: taskModel.personName,
+        psnName: taskModel.personName,
+      ));
+    }
+    if (psnList.isEmpty
+        && BaseService.profile.objId != null && BaseService.profile.objId!.isNotEmpty){
+      psnList.add(PersonModel(
+        id: BaseService.profile.objId,
+        personID: BaseService.profile.objId,
+        code: BaseService.profile.objCode,
+        psnNum: BaseService.profile.objCode,
+        name: BaseService.profile.realName,
+        psnName: BaseService.profile.realName,
+      ));
+    }
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 200));
+      ///需要等待 personAdapter 被赋值后，再写入历史员工数据
+      if ((!isPsnHasAdapter || personAdapter != null)
+          && depAdapter != null){
+        await setTheLastSelectedPsnData(psnList);
+        update();
+        return false;
+      }
+      return true;
+    });
 
     return true;
   }
@@ -962,46 +993,95 @@ class DeviceSubmitController
     ProgressDialogUtil.showProgressDialog(msg: '正在返回扫描结果');
 
     searchString = getBarCodePrefix(searchString, objectItem.attributeList);
-    List<String> list = searchString.split('|');
-    if (list.length < 3){
-      TipsUtils.showTip(
-        msg: '条码错误，请检查设置的默认条码格式！',
-        toastType: ToastType.warn,
+    if (searchString.substring(0, 1) == r'$'){
+      ApiResult<MoTaskModel> res = await splitBy$BarcodeCheckTask<MoTaskModel>(
+        searchString,
+        extraParams: {
+          'progid': 651011,
+        },
+        rows: 1,
       );
-      isLoading = false;
-      ProgressDialogUtil.close();
-      return;
+      if (!res.isSuccess){
+        TipsUtils.showTip(
+          msg: '${res.info}',
+          toastType: ToastType.error,
+        );
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return;
+      }
+      if (res.data!.deviceId != deviceId){
+        TipsUtils.showTip(
+          msg: '派工单设备不匹配！',
+          toastType: ToastType.warn,
+        );
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return;
+      }
+      await getOtherTask(res.data!);
     }
-    switch (list[1]){
-      case 'F':
-        //region 派工单条码 651011
-        if (list.length == 4){
-          if (list[2] == '651011'){
-            if (taskModel.taskId == list[3]){
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
+    else {
+      List<String> list = searchString.split('|');
+      if (list.length < 3){
+        TipsUtils.showTip(
+          msg: '条码错误，请检查设置的默认条码格式！',
+          toastType: ToastType.warn,
+        );
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return;
+      }
+      switch (list[1]){
+        case 'F':
+          //region 派工单条码 651011
+          ///|F|651011|1493a57f-6afe-4eb8-b6c1-42937db4a210
+          if (list.length == 4){
+            if (list[2] == '651011'){
+              if (taskModel.taskId == list[3]){
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              var taskRes = await MoTaskRepository().getFormData(list[3]);
+              if (!taskRes.isSuccess){
+                TipsUtils.showTip(
+                  msg: '获取生产派工单时出错：${taskRes.message}',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              if (taskRes.data.taskId.isEmpty){
+                TipsUtils.showTip(
+                  msg: '未查询到派工单信息！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              if (taskRes.data.deviceId != deviceId){
+                TipsUtils.showTip(
+                  msg: '派工单设备不匹配！',
+                  toastType: ToastType.warn,
+                );
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              await getOtherTask(taskRes.data);
             }
-            var taskRes = await MoTaskRepository().getFormData(list[3]);
-            if (!taskRes.isSuccess){
+            else {
               TipsUtils.showTip(
-                msg: '获取生产派工单时出错：${taskRes.message}',
+                msg: '条码错误！',
                 toastType: ToastType.warn,
               );
               isLoading = false;
               ProgressDialogUtil.close();
               return;
             }
-            if (taskRes.data.taskId.isEmpty){
-              TipsUtils.showTip(
-                msg: '未查询到派工单信息！',
-                toastType: ToastType.warn,
-              );
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            await getOtherTask(taskRes.data);
           }
           else {
             TipsUtils.showTip(
@@ -1012,8 +1092,174 @@ class DeviceSubmitController
             ProgressDialogUtil.close();
             return;
           }
-        }
-        else {
+          //endregion
+          break;
+        case 'IP':
+          //region 员工卡号
+          if (wcDataReportType == 2){
+            TipsUtils.showTip(
+              msg: '当前报工方式不需要选择员工！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          String idCode = list[2];
+          var psnRes = await PersonRepository().getFormData('', '', {'IdCode': idCode}, 0);
+          if (!psnRes.isSuccess){
+            TipsUtils.showTip(
+              msg: '获取员工数据时出错：${psnRes.message}！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (psnRes.data.id.isEmpty){
+            TipsUtils.showTip(
+              msg: '查询不到该员工！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if ((submitModel.empId ?? '').split(',').contains(psnRes.data.id)){
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (isPsnHasAdapter){
+            List<PersonModel> list = [];
+            if (isPsnMulti){
+              list = personAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
+            }
+            list.add(psnRes.data);
+            await personAdapter?.validViewValue(list);
+            await psnOnChanged(list);
+          }
+          else {
+            if (!isPsnMulti){
+              personList.clear();
+            }
+            personList.add(psnRes.data);
+            await psnOnChanged(personList);
+          }
+          //endregion
+          break;
+        case 'G':
+          //region 员工条码
+          if (wcDataReportType == 2){
+            TipsUtils.showTip(
+              msg: '当前报工方式不需要选择员工！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          String psnNum = list[2];
+          var psnRes = await PersonRepository().getFormData('', '', {'PsnNum': psnNum}, 0);
+          if (!psnRes.isSuccess){
+            TipsUtils.showTip(
+              msg: '获取员工数据时出错：${psnRes.message}！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (psnRes.data.id.isEmpty){
+            TipsUtils.showTip(
+              msg: '查询不到该员工！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if ((submitModel.empId ?? '').split(',').contains(psnRes.data.id)){
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (isPsnHasAdapter){
+            List<PersonModel> list = [];
+            if (isPsnMulti){
+              list = personAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
+            }
+            list.add(psnRes.data);
+            await personAdapter?.validViewValue(list);
+            await psnOnChanged(list);
+          }
+          else {
+            if (!isPsnMulti){
+              personList.clear();
+            }
+            personList.add(psnRes.data);
+            await psnOnChanged(personList);
+          }
+          //endregion
+          break;
+        case 'L':
+          //region 产线、加工中心、班组
+          String lineCode = list[2];
+          var wcRes = await MoBeltLineRepository().getFormData('', '', {'LineCode': lineCode}, 0);
+          if (!wcRes.isSuccess){
+            TipsUtils.showTip(
+              msg: '获取生产产线数据时出错：${wcRes.message}！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (wcRes.data.id.isEmpty){
+            TipsUtils.showTip(
+              msg: '查询不到该生产产线！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (wcRes.data.lineClass != wcDataReportType){
+            TipsUtils.showTip(
+              msg: '产线类型错误！',
+              toastType: ToastType.warn,
+            );
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (wcRes.data.id == submitModel.wcId){
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          switch (wcDataReportType){
+            //region
+            case 0: ///产线
+              MoBeltLineModel model = MoBeltLineModel.fromJson(wcRes.data.toJson());
+              await lineAdapter?.validViewValue([model]);
+              await lineOnChanged(model);
+              break;
+            case 1: ///加工中心
+              MoWorkCenterModel model = MoWorkCenterModel.fromJson(wcRes.data.toJson());
+              await workCenterAdapter?.validViewValue([model]);
+              await workCenterOnChanged(model);
+              break;
+            case 2: ///生产班组
+              MoBeltLineModel model = MoBeltLineModel.fromJson(wcRes.data.toJson());
+              await teamGroupAdapter?.validViewValue([model]);
+              await teamGroupOnChanged(model);
+              break;
+            //endregion
+          }
+          //endregion
+          break;
+        default:
           TipsUtils.showTip(
             msg: '条码错误！',
             toastType: ToastType.warn,
@@ -1021,182 +1267,7 @@ class DeviceSubmitController
           isLoading = false;
           ProgressDialogUtil.close();
           return;
-        }
-        //endregion
-        break;
-      case 'IP':
-        //region 员工卡号
-        if (wcDataReportType == 2){
-          TipsUtils.showTip(
-            msg: '当前报工方式不需要选择员工！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        String idCode = list[2];
-        var psnRes = await PersonRepository().getFormData('', '', {'IdCode': idCode}, 0);
-        if (!psnRes.isSuccess){
-          TipsUtils.showTip(
-            msg: '获取员工数据时出错：${psnRes.message}！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (psnRes.data.id.isEmpty){
-          TipsUtils.showTip(
-            msg: '查询不到该员工！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if ((submitModel.empId ?? '').split(',').contains(psnRes.data.id)){
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (isPsnHasAdapter){
-          List<PersonModel> list = [];
-          if (isPsnMulti){
-            list = personAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
-          }
-          list.add(psnRes.data);
-          await personAdapter?.validViewValue(list);
-          await psnOnChanged(list);
-        }
-        else {
-          if (!isPsnMulti){
-            personList.clear();
-          }
-          personList.add(psnRes.data);
-          await psnOnChanged(personList);
-        }
-        //endregion
-        break;
-      case 'G':
-        //region 员工条码
-        if (wcDataReportType == 2){
-          TipsUtils.showTip(
-            msg: '当前报工方式不需要选择员工！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        String psnNum = list[2];
-        var psnRes = await PersonRepository().getFormData('', '', {'PsnNum': psnNum}, 0);
-        if (!psnRes.isSuccess){
-          TipsUtils.showTip(
-            msg: '获取员工数据时出错：${psnRes.message}！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (psnRes.data.id.isEmpty){
-          TipsUtils.showTip(
-            msg: '查询不到该员工！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if ((submitModel.empId ?? '').split(',').contains(psnRes.data.id)){
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (isPsnHasAdapter){
-          List<PersonModel> list = [];
-          if (isPsnMulti){
-            list = personAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
-          }
-          list.add(psnRes.data);
-          await personAdapter?.validViewValue(list);
-          await psnOnChanged(list);
-        }
-        else {
-          if (!isPsnMulti){
-            personList.clear();
-          }
-          personList.add(psnRes.data);
-          await psnOnChanged(personList);
-        }
-        //endregion
-        break;
-      case 'L':
-        //region 产线、加工中心、班组
-        String lineCode = list[2];
-        var wcRes = await MoBeltLineRepository().getFormData('', '', {'LineCode': lineCode}, 0);
-        if (!wcRes.isSuccess){
-          TipsUtils.showTip(
-            msg: '获取生产产线数据时出错：${wcRes.message}！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (wcRes.data.id.isEmpty){
-          TipsUtils.showTip(
-            msg: '查询不到该生产产线！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (wcRes.data.lineClass != wcDataReportType){
-          TipsUtils.showTip(
-            msg: '产线类型错误！',
-            toastType: ToastType.warn,
-          );
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (wcRes.data.id == submitModel.wcId){
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        switch (wcDataReportType){
-          //region
-          case 0: ///产线
-            MoBeltLineModel model = MoBeltLineModel.fromJson(wcRes.data.toJson());
-            await lineAdapter?.validViewValue([model]);
-            await lineOnChanged(model);
-            break;
-          case 1: ///加工中心
-            MoWorkCenterModel model = MoWorkCenterModel.fromJson(wcRes.data.toJson());
-            await workCenterAdapter?.validViewValue([model]);
-            await workCenterOnChanged(model);
-            break;
-          case 2: ///生产班组
-            MoBeltLineModel model = MoBeltLineModel.fromJson(wcRes.data.toJson());
-            await teamGroupAdapter?.validViewValue([model]);
-            await teamGroupOnChanged(model);
-            break;
-          //endregion
-        }
-        //endregion
-        break;
-      default:
-        TipsUtils.showTip(
-          msg: '条码错误！',
-          toastType: ToastType.warn,
-        );
-        isLoading = false;
-        ProgressDialogUtil.close();
-        return;
+      }
     }
 
     isLoading = false;
@@ -1592,7 +1663,12 @@ class DeviceSubmitController
           NumPadUtil.lastBoxWeight: numPadReportItem(context, NumPadUtil.lastBoxWeight),
           NumPadUtil.qty: numPadReportItem(context, NumPadUtil.qty),
           NumPadUtil.weight: numPadReportItem(context, NumPadUtil.weight),
-        }
+        },
+
+      if (submitType != AppConfig.weight)
+        ...{
+          NumPadUtil.workHours: numPadReportItem(context, NumPadUtil.workHours),
+        },
     });
     formTitleMap.forEach((key, value) {
       if (itemAreaWidgetMap.containsKey(key)){

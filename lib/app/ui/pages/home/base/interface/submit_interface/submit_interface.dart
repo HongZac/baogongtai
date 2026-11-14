@@ -1300,10 +1300,10 @@ mixin SubmitInterface on SubmitPrintBarcodeInterface {
       }
     }
     if (needCheckSN){
-      if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
-          && (submitModel.serialNumber ?? '').isEmpty){
-        return {false: '按序列号报工时，必须需要序列号，请检查报工扫码中的序列号！'};
-      }
+      // if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
+      //     && (submitModel.serialNumber ?? '').isEmpty){
+      //   return {false: '按序列号报工时，必须需要序列号，请检查报工扫码中的序列号！'};
+      // }
       if ((submitType == AppConfig.serialNumberSubmit || submitType == AppConfig.singleBoxSerialNumberSubmit)
           && serialNumberCheckCodeList.isNotEmpty){
         String? snRes = submitModel.serialNumber!.split(',').firstWhereOrNull((sn){

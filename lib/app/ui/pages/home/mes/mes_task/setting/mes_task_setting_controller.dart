@@ -72,6 +72,9 @@ class MesTaskSettingController
   ///单页显示记录数
   int pageConfigRows = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_PAGE_CONFIG_ROWS_KEY) ?? AppConfig.pageConfigRows;
 
+  /// 查询后如果只有一条数据，是否自动进入详情页面
+  bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_TASK_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+
 
   MesTaskSettingController({
     super.progId = -1,
@@ -137,6 +140,12 @@ class MesTaskSettingController
   ///单页显示记录数 点击变化
   void pageConfigRowsOnChanged(int intValue) {
     pageConfigRows = intValue;
+    update();
+  }
+
+  ///查询后如果只有一条数据，是否自动进入详情页面 点击变化
+  void isEnterDetailAfterSearchOnChanged() {
+    isEnterDetailAfterSearch = !isEnterDetailAfterSearch;
     update();
   }
 
@@ -545,6 +554,7 @@ class MesTaskSettingController
 
     //region 数据保存
     ShareStorageUtil.instance?.write(SharedPreferencesKeys.MES_TASK_PAGE_CONFIG_ROWS_KEY, pageConfigRows);
+    ShareStorageUtil.instance?.write(SharedPreferencesKeys.MES_TASK_IS_ENTER_DETAIL_AFTER_SEARCH_KEY, isEnterDetailAfterSearch);
     //endregion
     ProgressDialogUtil.update(value: 1, msg: '设置成功，正在刷新数据！');
 

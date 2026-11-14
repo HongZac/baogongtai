@@ -42,6 +42,9 @@ class NumPadUtil {
   ///箱重（按托报工时使用，员工直接输入，数值 ~= 单箱数量 * 产品实际单重 + 皮重） (kg)
   static const String boxWeight = 'boxWeight';
 
+  ///报工工时,单位：分钟
+  static const String workHours = 'workHours';
+
   //endregion 每增加一个字段定义，必须确保该字段的名称也被添加到[isFieldDefined]的 list 中！！！！！！！！！！！！！！
 
 
@@ -124,6 +127,7 @@ class NumPadUtil {
       qty,
       weight,
       boxWeight,
+      workHours,
     ];
     return list.contains(fieldName);
   }

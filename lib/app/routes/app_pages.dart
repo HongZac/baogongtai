@@ -4,6 +4,8 @@ import 'package:desktop/app/ui/pages/home/andon/setting/andon_setting_binding.da
 import 'package:desktop/app/ui/pages/home/andon/setting/andon_setting_page.dart';
 import 'package:desktop/app/ui/pages/home/cloud_service_task/cloud_service_task_binding.dart';
 import 'package:desktop/app/ui/pages/home/cloud_service_task/cloud_service_task_page.dart';
+import 'package:desktop/app/ui/pages/home/inventory_attach/inventory_attach_binding.dart';
+import 'package:desktop/app/ui/pages/home/inventory_attach/inventory_attach_page.dart';
 import 'package:desktop/app/ui/pages/home/mes/base/belt_line/belt_line_binding.dart';
 import 'package:desktop/app/ui/pages/home/mes/base/belt_line/belt_line_page.dart';
 import 'package:desktop/app/ui/pages/home/mes/base/belt_line/detail/belt_line_detail_view.dart';
@@ -1032,6 +1034,14 @@ class AppPages {
                 name: RoutePath.CLOUD_SERVICE_TASK,
                 page: () => CloudServiceTaskPage(),
                 binding: CloudServiceTaskBinding(),
+              ),
+
+              ///产品图纸
+              GetPage(
+                title: '产品图纸',
+                name: RoutePath.INVENTORY_ATTACH,
+                page: () => InventoryAttachPage(),
+                binding: InventoryAttachBinding(),
               ),
               
               ///全局设置

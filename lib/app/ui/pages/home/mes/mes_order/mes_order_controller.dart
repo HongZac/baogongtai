@@ -115,9 +115,9 @@ class MesOrderController
       )
     );
     //endregion
+    dataListPageConfig.sidx = 'BillDate';
 
     dataListPageConfig.rows = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_ORDER_PAGE_CONFIG_ROWS_KEY) ?? AppConfig.pageConfigRows;
-    dataListPageConfig.sidx = 'BillDate';
     dataListPageConfig.queryData = {
       'progid': progId,
       'ExtOpFlag': 0, ///ExtOpFlag=0 去除委外
@@ -202,6 +202,37 @@ class MesOrderController
     }
   }
 
+  @override
+  Future<bool> Function({int pageIndex, bool showLoading}) get pageChanged => ({int pageIndex = 1, bool showLoading = true}) async {
+    bool res = await super.pageChanged(pageIndex: pageIndex, showLoading: showLoading);
+    if (res){
+      ///如果只有一条数据，则判断是否需要直接进入报工页面
+      if (dataList.length == 1){
+        bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_ORDER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+        if (isEnterDetailAfterSearch){
+          ProgressDialogUtil.awaitCompletionDelay().then((value){
+            enterDetail(dataList[0]);
+          });
+        }
+      }
+    }
+    return res;
+  };
+
+  void enterDetail(MoOpOrderModel item) {
+    Get.rootDelegate.toNamed(
+        AppRoutes.MES_ORDER_DETAIL_MAIN_PAGE,
+        arguments: MoOpOrderModel.fromJson(item.toJson()),
+        parameters: {
+          'key': item.moOrderId,
+          'keyName': 'order',
+          'orderOpenType': '0',
+          'noPermission': (dataService.isEnableOperatePrivilege
+              && objectItem.buttons?['desktopUISettingBtn'] == null) ? '1' : '0',
+          'permissionInfo': BaseService.profile.isSystem == true ? '【${objectItem.progid}】【desktopUISettingBtn】' : '',
+        }
+    );
+  }
 
   //region OnChanged
 
@@ -450,114 +481,152 @@ class MesOrderController
     ProgressDialogUtil.showProgressDialog(msg: '正在返回扫描结果');
 
     searchString = getBarCodePrefix(searchString, objectItem.attributeList);
-    List<String> list = searchString.split('|');
-    if (list.length < 3){
-      ToastNotification(Get.overlayContext!).warn('条码错误，请检查设置的默认条码格式！');
-      isLoading = false;
-      ProgressDialogUtil.close();
-      return;
-    }
-    switch (list[1]){
-      case 'F':
-        //region 生产任务单条码 610001
-        if (list.length == 4){
-          if (list[2] == '610001'){
-            scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: list[3]);
-            res = await pageChanged(showLoading: false);
-          }
-          else {
-            ToastNotification(Get.overlayContext!).warn('条码错误！');
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-        }
-        else {
-          ToastNotification(Get.overlayContext!).warn('条码错误！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        //endregion
-        break;
-      case 'T':
-        //region 工序条码 610001
-        if (list.length == 4){
-          if (list[2] == '610001'){
-            var res1 = await MoWorkBillEntryRepository().getMoWorkBillEntry(list[3]);
-            if (!res1.isSuccess){
-              ToastNotification(Get.overlayContext!).error('获取任务单信息和工序信息时出错：${res1.message}');
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            if ((res1.data.objectId ?? '').isEmpty){
-              ToastNotification(Get.overlayContext!).error('未查询到工序信息！');
-              isLoading = false;
-              ProgressDialogUtil.close();
-              return;
-            }
-            scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: res1.data.objectId);
-            res = await pageChanged(showLoading: false);
-          }
-          else {
-            ToastNotification(Get.overlayContext!).warn('条码错误！');
-            isLoading = false;
-            ProgressDialogUtil.close();
-            return;
-          }
-        }
-        else {
-          ToastNotification(Get.overlayContext!).warn('条码错误！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        //endregion
-        break;
-      case 'X':
-        //region 产品序列号
-        String string = list[2];
-        var res1 = await MoOrderSNRepository().getModel(string);
-        if (!res1.isSuccess){
-          ToastNotification(Get.overlayContext!).error('获取序列号数据时出错：${res1.message}！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (res1.data.id.isEmpty){
-          ToastNotification(Get.overlayContext!).error('查询不到该序列号！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (res1.data.moOrderId == null || res1.data.moOrderId!.isEmpty){
-          ToastNotification(Get.overlayContext!).error('该序列号未被分配到任务单！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        if (res1.data.enableMark != 1){
-          ToastNotification(Get.overlayContext!).error('该序列号已失效！');
-          isLoading = false;
-          ProgressDialogUtil.close();
-          return;
-        }
-        scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: res1.data.moOrderId);
-        res = await pageChanged(showLoading: false);
-        if (res){
-          ///实际上，此时[dataList]只会有一条记录
-          dataList.forEach((element) {
-            element.orderSN = string;
-          });
-        }
-        //endregion
-        break;
-      default:
-        ToastNotification(Get.overlayContext!).warn('条码错误！');
+    if (searchString.substring(0, 1) == r'$'){
+      ///该条码查询独立于其他条件查询
+      ApiResult<PageResult<MoOpOrderModel>> res = await splitBy$BarcodeCheckOrder<PageResult<MoOpOrderModel>>(
+        searchString,
+        extraParams: {
+          'progid': progId,
+          'ExtOpFlag': 0, ///ExtOpFlag=0 去除委外
+        },
+        rows: dataListPageConfig.rows,
+        sidx: dataListPageConfig.sidx,
+      );
+      if (!res.isSuccess){
+        ToastNotification(Get.overlayContext!).warn('${res.info}');
         isLoading = false;
         ProgressDialogUtil.close();
         return;
+      }
+      dataList.clear();
+      dataList.addAll(res.data!.rows);
+      total = res.data!.records ?? 0;
+      totalPage = res.data!.total ?? 0;
+      nowPage = res.data!.page ?? 0;
+      isDataByScan = true;
+      isLoading = false;
+      update();
+      ProgressDialogUtil.update(value: 1);
+      ///如果只有一条数据，则判断是否需要直接进入报工页面
+      if (dataList.length == 1){
+        bool isEnterDetailAfterSearch = ShareStorageUtil.instance?.read(SharedPreferencesKeys.MES_ORDER_IS_ENTER_DETAIL_AFTER_SEARCH_KEY) ?? AppConfig.isEnterDetailAfterSearch;
+        if (isEnterDetailAfterSearch){
+          await ProgressDialogUtil.awaitCompletionDelay();
+          enterDetail(dataList[0]);
+        }
+      }
+      return;
+    }
+    else {
+      List<String> list = searchString.split('|');
+      if (list.length < 3){
+        ToastNotification(Get.overlayContext!).warn('条码错误，请检查设置的默认条码格式！');
+        isLoading = false;
+        ProgressDialogUtil.close();
+        return;
+      }
+      switch (list[1]){
+        case 'F':
+          //region 生产任务单条码 610001
+          if (list.length == 4){
+            if (list[2] == '610001'){
+              scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: list[3]);
+              res = await pageChanged(showLoading: false);
+            }
+            else {
+              ToastNotification(Get.overlayContext!).warn('条码错误！');
+              isLoading = false;
+              ProgressDialogUtil.close();
+              return;
+            }
+          }
+          else {
+            ToastNotification(Get.overlayContext!).warn('条码错误！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          //endregion
+          break;
+        case 'T':
+          //region 工序条码 610001
+          if (list.length == 4){
+            if (list[2] == '610001'){
+              var res1 = await MoWorkBillEntryRepository().getMoWorkBillEntry(list[3]);
+              if (!res1.isSuccess){
+                ToastNotification(Get.overlayContext!).error('获取任务单信息和工序信息时出错：${res1.message}');
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              if ((res1.data.objectId ?? '').isEmpty){
+                ToastNotification(Get.overlayContext!).error('未查询到工序信息！');
+                isLoading = false;
+                ProgressDialogUtil.close();
+                return;
+              }
+              scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: res1.data.objectId);
+              res = await pageChanged(showLoading: false);
+            }
+            else {
+              ToastNotification(Get.overlayContext!).warn('条码错误！');
+              isLoading = false;
+              ProgressDialogUtil.close();
+              return;
+            }
+          }
+          else {
+            ToastNotification(Get.overlayContext!).warn('条码错误！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          //endregion
+          break;
+        case 'X':
+          //region 产品序列号
+          String string = list[2];
+          var res1 = await MoOrderSNRepository().getModel(string);
+          if (!res1.isSuccess){
+            ToastNotification(Get.overlayContext!).error('获取序列号数据时出错：${res1.message}！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (res1.data.id.isEmpty){
+            ToastNotification(Get.overlayContext!).error('查询不到该序列号！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (res1.data.moOrderId == null || res1.data.moOrderId!.isEmpty){
+            ToastNotification(Get.overlayContext!).error('该序列号未被分配到任务单！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          if (res1.data.enableMark != 1){
+            ToastNotification(Get.overlayContext!).error('该序列号已失效！');
+            isLoading = false;
+            ProgressDialogUtil.close();
+            return;
+          }
+          scanQueryDataOnChanged(keyWord: 'MoOrderId', keyValue: res1.data.moOrderId);
+          res = await pageChanged(showLoading: false);
+          if (res){
+            ///实际上，此时[dataList]只会有一条记录
+            dataList.forEach((element) {
+              element.orderSN = string;
+            });
+          }
+          //endregion
+          break;
+        default:
+          ToastNotification(Get.overlayContext!).warn('条码错误！');
+          isLoading = false;
+          ProgressDialogUtil.close();
+          return;
+      }
     }
 
     isDataByScan = true;
@@ -574,6 +643,7 @@ class MesOrderController
   void scanQueryDataOnChanged({String? keyWord, String? keyValue}) {
     dataListPageConfig.queryData!.removeWhere((key, value) => scanQueryDataList.contains(key));
     if (keyWord != null){
+      ///如果是扫码查询的话，todo
       dataListPageConfig.queryData![keyWord] = keyValue;
     }
   }
@@ -676,18 +746,7 @@ class MesOrderController
   Future<void> itemOnTap(MoOpOrderModel item) async{  }
 
   Future<void> itemOnDoubleTap(MoOpOrderModel item) async{
-    Get.rootDelegate.toNamed(
-        AppRoutes.MES_ORDER_DETAIL_MAIN_PAGE,
-        arguments: MoOpOrderModel.fromJson(item.toJson()),
-        parameters: {
-          'key': item.moOrderId,
-          'keyName': 'order',
-          'orderOpenType': '0',
-          'noPermission': (dataService.isEnableOperatePrivilege
-              && objectItem.buttons?['desktopUISettingBtn'] == null) ? '1' : '0',
-          'permissionInfo': BaseService.profile.isSystem == true ? '【${objectItem.progid}】【desktopUISettingBtn】' : '',
-        }
-    );
+    enterDetail(item);
   }
 
   Future<void> itemOnLongPress(MoOpOrderModel item) async{  }

@@ -146,7 +146,7 @@ mixin DateFilterInterface on GetxController {
           ? 70
           : 0,
       width: dateSearchTypeList.length == 1
-          ? kIsWeb || GetPlatform.isWindows ? 355 : 360
+          ? kIsWeb || GetPlatform.isWindows ? 363 : 360
           : kIsWeb || GetPlatform.isWindows ? 398 : 403,
       customizeContent: PrefixTextField(
         object: 3, height: 50, readOnly: true,
