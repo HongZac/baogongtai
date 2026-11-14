@@ -1,4 +1,5 @@
 import 'package:basement/model.dart';
+import 'package:basement/picker.dart';
 import 'package:basement/repository.dart';
 import 'package:desktop/app/service/tcp_serial/tcp_socket_service/mixin/tcp_socket_getx_listener_mixin.dart';
 import 'package:desktop/app/ui/pages/home/base/base_form/base_form_controller.dart';
@@ -20,6 +21,17 @@ on BaseFormController,
   final snContinuouslyReceivedList = [];
 
   bool _isLoading = false;
+
+  ///按单箱序列号报工时，序列号写入报工数据后的回调。
+  ///
+  ///默认与按序列号报工一致（[orderSNOnChanged]：写入 submitModel.serialNumber 并回填报工总数）；
+  ///
+  ///派工单报工（手动输入序列号）走的是 [submitSNOnChanged]：只记录序列号列表，不写报工总数，
+  ///提交时由 saveSubmit 按“单箱数量”拆分成整箱 + 剩余序列号。
+  ///此处可被子控制器重写，以保证 TCP/串口 与手动输入两条路径的行为完全一致。
+  void serialNumberScanSNOnChanged(List<PickerDataModel> list) {
+    orderSNOnChanged(list);
+  }
 
 
   ///序列号接收
@@ -250,7 +262,7 @@ on BaseFormController,
       List<MoOrderSNModel> list = orderSNAdapter?.dataList.where((element) => element.isSelected).toList() ?? [];
       list.add(orderSNModel ?? MoOrderSNModel(id: string, code: string));
       await orderSNAdapter?.validViewValue(list);
-      orderSNOnChanged(list);
+      serialNumberScanSNOnChanged(list);
       if (singleBoxSerialNumberSubmitAutoCommit){
         ///数量符合，可以执行自动提交
         ///报工提交前检查，未通过则退出

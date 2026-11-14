@@ -1499,6 +1499,16 @@ class MesTaskSubmitController
     }
   }
 
+  ///按单箱序列号报工时，序列号写入报工数据后的回调（TCP/串口 扫描路径使用）。
+  ///
+  ///与本页“请扫描条码”手动输入序列号的路径保持一致：只记录序列号列表（[snCodeStr]），
+  ///不写入 submitModel.serialNumber、也不回填“报工总数”；
+  ///整箱（单箱数量）与剩余序列号的拆分统一由 [saveSubmit] 处理。
+  @override
+  void serialNumberScanSNOnChanged(List<PickerDataModel> list) {
+    submitSNOnChanged(list);
+  }
+
   //endregion
 
 
